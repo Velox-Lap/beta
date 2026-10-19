@@ -208,3 +208,41 @@ create policy "Users can remove own memory photos" on storage.objects for delete
 
 -- Note: policies are intentionally scoped to authenticated users. Review and test in
 -- Supabase's policy tester before production use; this schema is a starter, not an audit.
+
+
+-- Direct messages. Only accepted friends or linked pair members may exchange messages.
+create table if not exists public.direct_messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  body text not null check (char_length(body) between 1 and 2000),
+  created_at timestamptz not null default now(),
+  constraint direct_messages_not_self check (sender_id <> recipient_id)
+);
+create index if not exists direct_messages_conversation_idx
+  on public.direct_messages (sender_id, recipient_id, created_at desc);
+alter table public.direct_messages enable row level security;
+drop policy if exists "Participants can read their direct messages" on public.direct_messages;
+create policy "Participants can read their direct messages" on public.direct_messages
+  for select to authenticated using (auth.uid() = sender_id or auth.uid() = recipient_id);
+drop policy if exists "Friends or pair can send direct messages" on public.direct_messages;
+create policy "Friends or pair can send direct messages" on public.direct_messages
+  for insert to authenticated with check (
+    sender_id = auth.uid()
+    and exists (
+      select 1 from public.profiles p where p.id = recipient_id
+    )
+    and (
+      exists (
+        select 1 from public.friendships f
+        where f.status = 'accepted'
+          and ((f.user_a = sender_id and f.user_b = recipient_id)
+            or (f.user_a = recipient_id and f.user_b = sender_id))
+      )
+      or exists (
+        select 1 from public.couples c
+        where (c.user_one = sender_id and c.user_two = recipient_id)
+           or (c.user_one = recipient_id and c.user_two = sender_id)
+      )
+    )
+  );
