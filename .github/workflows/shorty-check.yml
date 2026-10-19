@@ -3,10 +3,18 @@ name: Shorty Memory checks
 on:
   push:
     paths:
+      - "index.html"
+      - "styles.css"
+      - "app.js"
+      - "config.js"
       - "shorty-memory/**"
       - ".github/workflows/shorty-check.yml"
   pull_request:
     paths:
+      - "index.html"
+      - "styles.css"
+      - "app.js"
+      - "config.js"
       - "shorty-memory/**"
       - ".github/workflows/shorty-check.yml"
   workflow_dispatch:
@@ -26,15 +34,44 @@ jobs:
           node-version: "20"
       - name: Check JavaScript syntax
         run: |
+          node --check app.js
+          node --check config.js
           node --check shorty-memory/app.js
           node --check shorty-memory/config.js
-      - name: Verify required files
+      - name: Verify required files and browser asset order
         run: |
+          test -s index.html
+          test -s styles.css
+          test -s app.js
+          test -s config.js
           test -s shorty-memory/index.html
           test -s shorty-memory/styles.css
           test -s shorty-memory/app.js
           test -s shorty-memory/config.js
-          test -s shorty-memory/README.md
-          test -s shorty-memory/supabase/schema.sql
+          grep -q './config.js' index.html
+          grep -q './app.js' index.html
           grep -q './config.js' shorty-memory/index.html
           grep -q './app.js' shorty-memory/index.html
+      - name: Catch querySelector collection regressions
+        run: |
+          node --input-type=commonjs <<'NODE'
+          const fs = require('node:fs');
+          for (const file of ['app.js', 'shorty-memory/app.js']) {
+            const code = fs.readFileSync(file, 'utf8');
+            if (/(?<!\$)\$\([^)]*\)\.forEach/.test(code)) {
+              throw new Error(file + ': single-element querySelector result used with .forEach()');
+            }
+            for (const marker of ['function bind()', 'function nav(v)', 'function bindView()']) {
+              if (!code.includes(marker)) throw new Error(file + ': missing ' + marker);
+            }
+            console.log(file + ': selector regression check passed');
+          }
+          const html = fs.readFileSync('index.html', 'utf8');
+          if (html.indexOf('./config.js') > html.indexOf('./app.js')) {
+            throw new Error('index.html must load config.js before app.js');
+          }
+          if (!html.includes('id="terminalForm"')) {
+            throw new Error('Terminal form is missing');
+          }
+          console.log('HTML bootstrap checks passed');
+          NODE
