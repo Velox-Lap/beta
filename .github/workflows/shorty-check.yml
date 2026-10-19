@@ -8,6 +8,7 @@ on:
       - "app.js"
       - "config.js"
       - "shorty-memory/**"
+      - "tests/**"
       - ".github/workflows/shorty-check.yml"
   pull_request:
     paths:
@@ -38,6 +39,8 @@ jobs:
           node --check config.js
           node --check shorty-memory/app.js
           node --check shorty-memory/config.js
+      - name: Test terminal submit behavior
+        run: node --test tests/terminal.test.cjs
       - name: Verify required files and browser asset order
         run: |
           test -s index.html
