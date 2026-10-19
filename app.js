@@ -1,356 +1,114 @@
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => [...document.querySelectorAll(selector)];
-const DB = "shorty-demo-v1";
-const defaultState = {
-  profile: { name: "Guest user", bio: "Still writing my lore...", avatar: "" },
-  startDate: "",
-  memories: [],
-  friends: [{ name: "Pixel Pal", bio: "Demo friend · not a real account", avatar: "" }],
-  pairingCode: "",
-  paired: false,
-  lettersOpened: []
-};
-let state = readState();
-let toastTimer;
-
-function readState() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(DB));
-    return parsed && typeof parsed === "object"
-      ? { ...structuredClone(defaultState), ...parsed, profile: { ...defaultState.profile, ...(parsed.profile || {}) } }
-      : structuredClone(defaultState);
-  } catch { return structuredClone(defaultState); }
-}
-function persist() {
-  try { localStorage.setItem(DB, JSON.stringify(state)); return true; }
-  catch { showToast("Storage is full. Try a smaller profile image."); return false; }
-}
-function showToast(message) {
-  const toast = $("#toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
-}
-function safeText(tag, text, className) {
-  const el = document.createElement(tag);
-  el.textContent = text;
-  if (className) el.className = className;
-  return el;
-}
-function addTerminalLine(text, cls = "") {
-  const line = safeText("p", text, cls);
-  $("#terminal-output").append(line);
-  $("#terminal-output").scrollTop = $("#terminal-output").scrollHeight;
-}
-function enterApp() {
-  $("#terminal-screen").classList.add("hidden");
-  $("#app-shell").classList.remove("hidden");
-  updateProfileUI();
-  renderMemories();
-  renderFriends();
-  renderLetters();
-  updateCounter();
-  updatePairUI();
-  showView("home");
-}
-$("#terminal-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const input = $("#terminal-input");
-  const command = input.value.trim();
-  if (!command) return;
-  addTerminalLine(`guest@shorty:~$ ${command}`);
-  input.value = "";
-  const lower = command.toLowerCase();
-  if (lower === "help") {
-    addTerminalLine("AVAILABLE COMMANDS:");
-    addTerminalLine("  help                 show this menu");
-    addTerminalLine("  login -u baby        enter the demo universe");
-    addTerminalLine("  execute love.sh      execute extremely cute code");
-    addTerminalLine("  run meow_memories.exe open the memory archive");
-    addTerminalLine("  load shorty_pics     open the dashboard");
-    addTerminalLine("  clear                clear terminal output");
-  } else if (lower === "login -u baby" || lower === "execute love.sh" || lower === "load shorty_pics") {
-    addTerminalLine("[OK] identity accepted · welcome to your little universe", "green");
-    setTimeout(enterApp, 350);
-  } else if (lower === "run meow_memories.exe") {
-    addTerminalLine("[OK] memory module loaded", "green");
-    setTimeout(() => { enterApp(); showView("memories"); }, 350);
-  } else if (lower === "clear") {
-    $("#terminal-output").replaceChildren();
-  } else {
-    addTerminalLine(`[ERR] command not found: ${command}`);
-    addTerminalLine("Type 'help' to see available commands.");
-  }
-});
-$("#terminal-input").addEventListener("keydown", (e) => {
-  if (e.key === "Tab") { e.preventDefault(); $("#terminal-input").value = "login -u baby"; }
-});
-
-const viewTitles = {
-  home: "Your little universe",
-  letters: "Open when...",
-  memories: "Memory archive",
-  people: "People & friends",
-  pair: "Pair our accounts"
-};
-function showView(view) {
-  if (!viewTitles[view]) return;
-  $$(".view").forEach(el => el.classList.add("hidden"));
-  $(`#view-${view}`).classList.remove("hidden");
-  $$(".nav-item").forEach(el => el.classList.toggle("active", el.dataset.view === view));
-  $("#view-title").innerHTML = `${viewTitles[view]}<span class="pink">.</span>`;
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-$$("[data-view]").forEach(button => button.addEventListener("click", () => showView(button.dataset.view)));
-$("#logout-button").addEventListener("click", () => {
-  $("#app-shell").classList.add("hidden");
-  $("#terminal-screen").classList.remove("hidden");
-  $("#terminal-input").focus();
-  showToast("Logged out of this demo session.");
-});
-$("#profile-open").addEventListener("click", () => showView("people"));
-
-function updateProfileUI() {
-  const name = state.profile.name || "Guest user";
-  $("#mini-name").textContent = name;
-  $("#top-name").textContent = name;
-  $("#welcome-name").textContent = name.split(" ")[0];
-  $("#profile-name-heading").textContent = name;
-  $("#profile-bio").textContent = state.profile.bio || "Still writing my lore...";
-  $("#profile-name").value = name === "Guest user" ? "" : name;
-  $("#profile-bio-input").value = state.profile.bio === "Still writing my lore..." ? "" : state.profile.bio;
-  ["#mini-avatar", "#top-avatar", "#profile-preview"].forEach(selector => {
-    const el = $(selector);
-    el.replaceChildren();
-    if (state.profile.avatar) {
-      const img = document.createElement("img");
-      img.src = state.profile.avatar;
-      img.alt = "Profile photo";
-      el.append(img);
-      el.classList.remove("avatar-placeholder");
-    } else {
-      el.textContent = "♡";
-      el.classList.add("avatar-placeholder");
-    }
-  });
-}
-$("#profile-form").addEventListener("submit", e => {
-  e.preventDefault();
-  state.profile.name = $("#profile-name").value.trim() || "Guest user";
-  state.profile.bio = $("#profile-bio-input").value.trim() || "Still writing my lore...";
-  if (persist()) { updateProfileUI(); showToast("Profile saved on this device."); }
-});
-$("#avatar-upload").addEventListener("change", e => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  if (!file.type.startsWith("image/")) return showToast("Choose an image file.");
-  if (file.size > 700 * 1024) return showToast("Please choose an image under 700 KB for this demo.");
-  const reader = new FileReader();
-  reader.onload = () => {
-    const previous = state.profile.avatar;
-    state.profile.avatar = reader.result;
-    if (persist()) updateProfileUI();
-    else state.profile.avatar = previous;
-  };
-  reader.readAsDataURL(file);
-});
-
-$("#set-date-button").addEventListener("click", () => {
-  const answer = prompt("Enter your special date (YYYY-MM-DD):", state.startDate || "");
-  if (answer === null) return;
-  if (answer && !/^\d{4}-\d{2}-\d{2}$/.test(answer)) return showToast("Use YYYY-MM-DD format.");
-  state.startDate = answer;
-  persist();
-  updateCounter();
-});
-function updateCounter() {
-  if (!state.startDate) {
-    $("#together-counter").textContent = "Set your date";
-    $("#together-sub").textContent = "Every moment counts";
-    return;
-  }
-  const start = new Date(`${state.startDate}T00:00:00`);
-  if (Number.isNaN(start.getTime()) || start > new Date()) {
-    $("#together-counter").textContent = "Check date";
-    $("#together-sub").textContent = "Enter a date in the past";
-    return;
-  }
-  const days = Math.floor((new Date() - start) / 86400000);
-  $("#together-counter").textContent = `${days.toLocaleString()} days`;
-  $("#together-sub").textContent = `Since ${start.toLocaleDateString()}`;
-}
-const movies = [
-  ["Arrival", "Sci-fi · thoughtful and a little emotional"],
-  ["Knives Out", "Mystery · everyone is suspicious"],
-  ["Spider-Man: Into the Spider-Verse", "Animation · colorful chaos"],
-  ["The Martian", "Sci-fi · problem-solving on Mars"],
-  ["Enola Holmes", "Mystery · clever clues and adventure"],
-  ["Interstellar", "Sci-fi · space, time, and big feelings"],
-  ["The Grand Budapest Hotel", "Comedy · stylish, strange, delightful"],
-  ["A Quiet Place", "Thriller · maybe keep the lights on"]
+(() => {
+"use strict";
+const $ = (s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const KEY="shorty.memory.db.v1", SESSION="shorty.memory.session.v1";
+const AVATAR="data:image/svg+xml;charset=UTF-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#303b25"/><text x="50" y="61" font-size="38" text-anchor="middle" fill="#c8f169" font-family="monospace">S/M</text></svg>');
+const Q=[
+"You do not have to be impressive to be loved. You can just be here.",
+"A small message can make an ordinary day feel a little less ordinary.",
+"Home is sometimes a person who lets you finish your sentence.",
+"Take a breath. The world can wait for thirty seconds.",
+"You are allowed to grow at a pace that feels like your own.",
+"Some of the best memories begin with: this is probably a silly idea.",
+"You deserve kindness on the days when you have nothing extra to give."
 ];
-$("#movie-button").addEventListener("click", () => {
-  const movie = movies[Math.floor(Math.random() * movies.length)];
-  $("#movie-result").replaceChildren(
-    safeText("span", "YOUR RANDOM PICK", "movie-tag"),
-    safeText("h2", movie[0]),
-    safeText("p", movie[1])
-  );
-});
-const messages = [
-  "You make the ordinary parts of life feel a little more magical.",
-  "Reminder: you don't have to solve everything today.",
-  "Someone is very lucky to know the real you.",
-  "Tiny progress is still progress. Please be kind to yourself.",
-  "Your laugh belongs in the world's best sound collection.",
-  "Drink some water. Unclench your jaw. You are doing okay.",
-  "You deserve the same patience you give to everyone else."
+const MOVIES=[
+["The Mitchells vs. the Machines","SCI-FI · COMEDY","Chaotic robots, family, and a lot of heart.","✳"],
+["The Martian","SCI-FI · ADVENTURE","One astronaut, a lot of science, stubborn optimism.","◉"],
+["Spider-Man: Into the Spider-Verse","ANIMATION · ACTION","Wild colors and the courage to be yourself.","✦"],
+["Enola Holmes","MYSTERY · ADVENTURE","A clever mystery for a curious evening.","⌕"],
+["The Truman Show","MYSTERY · DRAMA","A strange world and one very big question.","▧"],
+["How to Train Your Dragon","FANTASY · ADVENTURE","An unlikely friendship with a little flying.","◇"],
+["Kiki's Delivery Service","ANIMATION · COMFORT","A soft reminder that confidence takes practice.","☾"]
 ];
-$("#message-button").addEventListener("click", () => {
-  const current = $("#daily-message").textContent;
-  const choices = messages.filter(m => m !== current);
-  $("#daily-message").textContent = choices[Math.floor(Math.random() * choices.length)];
-});
-const mascotLines = [
-  "meow.exe says: you are doing purr-fectly.",
-  "Shorty has scanned the room. Cuteness levels: HIGH.",
-  "Reminder from your pixel cat: take a tiny break.",
-  "Error 404: a reason not to smile was not found.",
-  "Shorty would like one (1) virtual head pat."
+const LETTERS=[
+["tired","☁","OPEN WHEN YOU ARE TIRED","You can put it down for a while.","For the days that ask a little too much.","Hey you.\n\nYou do not have to fix every problem today. You do not have to make everyone proud every minute. Take a little break, drink some water, and let one thing be enough for now.\n\nYou are still you, even when your energy is low. That is enough for today."],
+["miss","♡","OPEN WHEN YOU MISS ME","A tiny hug, delivered digitally.","Distance cannot cancel the good things.","Imagine a tiny pixel cat arriving with a very serious delivery. The package contains one hug, two silly thoughts, and a reminder that someone is happy you exist.\n\nUntil we get to see each other again, notice something nice around you and save it to tell me later. No pressure to reply right away."],
+["anxious","✳","OPEN WHEN EVERYTHING FEELS LOUD","One thing at a time.","A small pause for a busy brain.","Pause for a second. Let your shoulders rest.\n\nYou do not need to solve the whole future tonight. Pick the next small, kind thing you can do. The rest can wait until you have more room to think.\n\nYou are a person, not a machine. Even the best machines need a cooldown."],
+["happy","✦","OPEN WHEN SOMETHING GOOD HAPPENS","I hope you celebrate it.","Good news deserves to be noticed.","Look at you, collecting another little win. It does not have to be huge or impressive to count.\n\nLet yourself enjoy this without immediately moving the goalpost. Take a photo, tell someone, dance in your room, or simply smile at yourself. This moment belongs to you."],
+["doubt","◇","OPEN WHEN YOU DOUBT YOURSELF","Progress can be quiet.","For the moments when you cannot see it.","You have made it through every confusing chapter that came before this one. You learned things you did not know how to do. You changed your mind. You tried again.\n\nYou do not need to feel confident to take the next step. You only need to make the step small enough to begin. Be on your own side today."],
+["random","☾","OPEN WHEN YOU NEED A RANDOM NOTE","Official reminder from Shorty.exe.","A very important system notification.","SYSTEM NOTICE 0087:\n\nYour current mission is to find one thing that makes you smile. This may include a cat being weird, an excellent snack, a ridiculous meme, or a song that goes extra hard.\n\nMission deadline: whenever. Penalty for not completing: absolutely none."]
 ];
-$("#mascot").addEventListener("click", () => {
-  showToast(mascotLines[Math.floor(Math.random() * mascotLines.length)]);
-  $("#mascot .mascot-face").textContent = "ฅ(=˃ᆺ˂=)ฅ";
-  setTimeout(() => $("#mascot .mascot-face").textContent = "ฅ^•ﻌ•^ฅ", 1000);
-});
-$("#pet-companion").addEventListener("click", () => $("#mascot").click());
-
-const letters = [
-  { title: "Open when you're tired", hint: "You don't need to be productive every second.", body: "Hey you. It's okay to pause. You don't have to earn your rest, and you don't have to be impressive every day. Get comfortable, take a breath, and let today be enough. I'm rooting for you, even on the quiet days. ♡" },
-  { title: "Open when you miss me", hint: "A small hug, delivered in pixels.", body: "If I could send a little hug through this screen, I'd send one that lasts until your shoulders relax. Until then, remember: the distance between messages doesn't measure how much someone cares. You're on my mind. ♡" },
-  { title: "Open when you're stressed", hint: "One thing at a time. Seriously.", body: "You don't need to solve the whole week in one afternoon. Pick one small thing, do what you can, and let the rest wait its turn. You are a person, not a machine. Breathe. I'm proud of you for trying." },
-  { title: "Open when you need a smile", hint: "Warning: low-level silliness detected.", body: "Official notice from the Department of Cute Things: you have been sentenced to one smile, three deep breaths, and an unnecessary amount of affection. This ruling is final. ฅ^•ﻌ•^ฅ" }
-];
-function renderLetters() {
-  const grid = $("#letter-grid");
-  grid.replaceChildren();
-  letters.forEach((letter, index) => {
-    const button = document.createElement("button");
-    button.className = "letter-card";
-    button.type = "button";
-    const envelope = safeText("span", "✉", "envelope");
-    const copy = document.createElement("span");
-    copy.append(safeText("h3", letter.title), safeText("p", letter.hint));
-    button.append(envelope, copy, safeText("span", "↗", "letter-arrow"));
-    button.addEventListener("click", () => openLetter(index));
-    grid.append(button);
-  });
-}
-function openLetter(index) {
-  const letter = letters[index];
-  $("#letter-modal-title").textContent = letter.title;
-  $("#letter-modal-body").textContent = letter.body;
-  $("#letter-modal").classList.remove("hidden");
-  state.lettersOpened = [...new Set([...(state.lettersOpened || []), index])];
-  persist();
-}
-function closeLetter() { $("#letter-modal").classList.add("hidden"); }
-$("#close-letter").addEventListener("click", closeLetter);
-$("#letter-done").addEventListener("click", closeLetter);
-$("#letter-modal").addEventListener("click", e => { if (e.target.id === "letter-modal") closeLetter(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeLetter(); });
-
-$("#memory-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const title = $("#memory-title").value.trim();
-  const body = $("#memory-body").value.trim();
-  if (!title || !body) return;
-  state.memories.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title, body, date: $("#memory-date").value || new Date().toISOString().slice(0, 10) });
-  if (persist()) { renderMemories(); e.target.reset(); showToast("Memory saved to this browser."); }
-});
-function renderMemories() {
-  const list = $("#memory-list");
-  list.replaceChildren();
-  if (!state.memories.length) {
-    list.append(safeText("p", "No memories yet. Save a small moment above.", "empty-state"));
-    return;
-  }
-  state.memories.forEach(memory => {
-    const card = document.createElement("article");
-    card.className = "memory-item";
-    const date = safeText("time", memory.date || "");
-    const title = safeText("h3", memory.title);
-    const body = safeText("p", memory.body);
-    const remove = safeText("button", "Delete memory", "delete-button");
-    remove.type = "button";
-    remove.addEventListener("click", () => {
-      state.memories = state.memories.filter(item => item.id !== memory.id);
-      persist(); renderMemories(); showToast("Memory deleted.");
-    });
-    card.append(date, title, body, remove);
-    list.append(card);
-  });
-}
-$("#friend-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const name = $("#friend-name").value.trim();
-  if (!name) return;
-  if (state.friends.some(f => f.name.toLowerCase() === name.toLowerCase())) return showToast("That name is already on your list.");
-  state.friends.push({ name, bio: "Local demo contact", avatar: "" });
-  if (persist()) { renderFriends(); e.target.reset(); showToast("Added to your local friends list."); }
-});
-function renderFriends() {
-  const list = $("#friend-list");
-  list.replaceChildren();
-  $("#friend-count").textContent = `${state.friends.length} FRIEND${state.friends.length === 1 ? "" : "S"}`;
-  if (!state.friends.length) list.append(safeText("p", "No friends added yet."));
-  state.friends.forEach((friend, index) => {
-    const card = document.createElement("div");
-    card.className = "friend-card";
-    const avatar = safeText("div", "♡", "avatar");
-    const info = document.createElement("div");
-    info.className = "friend-info";
-    info.append(safeText("strong", friend.name), safeText("small", friend.bio || "Local demo contact"));
-    const remove = safeText("button", "Remove");
-    remove.type = "button";
-    remove.addEventListener("click", () => {
-      state.friends.splice(index, 1);
-      persist(); renderFriends();
-    });
-    card.append(avatar, info, remove);
-    list.append(card);
-  });
-}
-function updatePairUI() {
-  $("#pair-code").textContent = state.pairingCode || "------";
-  $("#pair-status").textContent = state.paired ? "Pair connected ♡" : "Not paired yet";
-  $("#pair-sub").textContent = state.paired ? "Demo connection saved on this device" : "Two accounts, one little universe";
-}
-$("#generate-code").addEventListener("click", () => {
-  state.pairingCode = Array.from({ length: 6 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
-  state.paired = false;
-  persist(); updatePairUI();
-  showToast("Code generated. Share it manually for this demo.");
-});
-$("#copy-code").addEventListener("click", async () => {
-  if (!state.pairingCode) return showToast("Generate a code first.");
-  try { await navigator.clipboard.writeText(state.pairingCode); showToast("Pairing code copied."); }
-  catch { showToast(`Your code is ${state.pairingCode}`); }
-});
-$("#join-pair-form").addEventListener("submit", e => {
-  e.preventDefault();
-  const code = $("#join-code").value.trim().toUpperCase();
-  if (!state.pairingCode) {
-    $("#pair-feedback").textContent = "This local demo has no shared server to verify another person's code.";
-    return;
-  }
-  if (code === state.pairingCode) {
-    state.paired = true;
-    persist(); updatePairUI();
-    $("#pair-feedback").textContent = "Demo pairing enabled on this browser.";
-    showToast("Paired locally. This does not connect another account.");
-  } else {
-    $("#pair-feedback").textContent = "Code not found in this browser. Real cross-account pairing needs a backend.";
-  }
-});
+let client=null, remote=false, user=null, profile=null, people=[], edges=[], memories=[], couple=null, invite=null;
+let view="home", quoteIndex=0, movie=MOVIES[0], filter="all", searchText="", toastTimer, selectedChat="", chatMessages=[];
+const enc=(s="")=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const id=()=>crypto.randomUUID?crypto.randomUUID():"id-"+Math.random().toString(36).slice(2)+Date.now();
+const initial=(s="?")=>Array.from(String(s||"?").trim())[0].toUpperCase();
+const today=()=>new Date().toISOString().slice(0,10);
+function getDB(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch{return {}}}
+function putDB(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function getUsers(){return getDB().users||[]}
+function getUser(i){return getUsers().find(u=>u.id===i)}
+function toast(s,err=false){let n=$("#toast");n.textContent=s;n.classList.toggle("error",err);n.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>n.classList.remove("show"),3300)}
+function setup(){const c=window.SHORTY_CONFIG||{};if(c.supabaseUrl&&c.supabaseAnonKey&&!c.supabaseUrl.includes("YOUR_PROJECT")&&!c.supabaseAnonKey.includes("YOUR_PUBLIC")&&window.supabase?.createClient){client=window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey);remote=true}}
+function syncBadge(){$("#syncLabel").textContent=remote?"CLOUD CONNECTED":"LOCAL PREVIEW";$("#syncDetail").textContent=remote?"Supabase sync enabled":"Data stays in this browser"}
+function terminal(s,cls=""){let p=document.createElement("p");p.className=cls;p.textContent=s;$("#terminalOutput").append(p);while($("#terminalOutput").children.length>13)$("#terminalOutput").firstChild.remove()}
+function switchTab(t){$$(".auth-tab").forEach(b=>b.classList.toggle("is-active",b.dataset.authTab===t));$("#loginForm").classList.toggle("hidden",t!=="login");$("#registerForm").classList.toggle("hidden",t!=="register")}
+function auth(t="login"){switchTab(t);if(!$("#authDialog").open)$("#authDialog").showModal()}
+function boot(){user=null;profile=null;$("#bootScreen").classList.remove("hidden");$("#appShell").classList.add("hidden");$("#mascotButton").classList.add("hidden");$("#mascotBubble").classList.add("hidden")}
+function cmd(raw){let c=raw.trim(),l=c.toLowerCase();if(!c)return;terminal("guest@shorty:~$ "+c);if(l==="help"||l==="?"){["COMMANDS:","  login                 open identity portal","  execute love.sh       unlock dashboard","  run meow_memories.exe browse memories","  load shorty_pics      browse photo vault","  open letters          open a saved note","  clear                 clear terminal","  whoami                inspect session"].forEach(x=>terminal(x))}else if(l==="clear")$("#terminalOutput").replaceChildren();else if(l==="whoami")terminal("SESSION: "+(profile?.username||"guest"));else if(["login","login -u baby","login -u shorty"].includes(l))auth("login");else if(["execute love.sh","run meow_memories.exe","load shorty_pics","unlock","open letters"].includes(l)){if(user)enter(l.includes("pics")||l.includes("meow")?"memories":l.includes("letters")?"letters":"home");else auth("login")}else terminal("Unknown command. Try help.","term-error");$("#terminalInput").value=""}
+async function hashPass(pass,salt){let data=new TextEncoder().encode(pass);if(crypto.subtle){let k=await crypto.subtle.importKey("raw",data,"PBKDF2",false,["deriveBits"]);let b=await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(salt),iterations:120000,hash:"SHA-256"},k,256);return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}return "demo"}
+async function register(form){let f=new FormData(form),name=String(f.get("displayName")).trim(),username=String(f.get("username")).trim().toLowerCase(),email=String(f.get("email")).trim().toLowerCase(),pass=String(f.get("password")),note=$("#registerNote");if(!/^[a-z0-9_.-]{3,18}$/.test(username)){note.textContent="Username must be 3–18 valid characters.";return}note.textContent="Creating your space…";try{if(remote){let {data,error}=await client.auth.signUp({email,password:pass,options:{data:{username,display_name:name}}});if(error)throw error;if(!data.session){note.textContent="Account created. Verify your email, then log in.";return}user=data.user;await saveProfile({username,display_name:name,bio:"",avatar_url:"",anniversary_date:""});await refreshRemote();$("#authDialog").close();enter("home");toast("Account created.")}else{let d=getDB();d.users=d.users||[];if(d.users.some(u=>u.username===username||u.email===email))throw Error("Username or email already exists in this browser.");let salt=id(),ph=await hashPass(pass,salt),u={id:"local-"+id(),username,display_name:name,email,password_salt:salt,password_hash:ph,bio:"",avatar_url:"",anniversary_date:"",created_at:new Date().toISOString()};d.users.push(u);putDB(d);sessionStorage.setItem(SESSION,u.id);user={id:u.id,email};await refreshLocal();$("#authDialog").close();enter("home");toast("Demo account created in this browser only.")}}catch(e){note.textContent=e.message||"Could not create account."}}
+async function login(form){let f=new FormData(form),email=String(f.get("email")).trim().toLowerCase(),pass=String(f.get("password")),note=$("#loginNote");note.textContent="Checking credentials…";try{if(remote){let {data,error}=await client.auth.signInWithPassword({email,password:pass});if(error)throw error;user=data.user;await ensureProfile();await refreshRemote();$("#authDialog").close();enter("home");toast("Welcome back.")}else{let u=getUsers().find(x=>x.email===email);if(!u)throw Error("No demo account found. Create one or continue as a guest.");if(await hashPass(pass,u.password_salt)!==u.password_hash)throw Error("Email or password does not match.");user={id:u.id,email};sessionStorage.setItem(SESSION,u.id);await refreshLocal();$("#authDialog").close();enter("home");toast("Logged in to local preview.")}}catch(e){note.textContent=e.message||"Could not log in."}}
+async function ensureProfile(){if(!remote||!user)return;let {data,error}=await client.from("profiles").select("*").eq("id",user.id).maybeSingle();if(error)throw error;if(!data){let m=user.user_metadata||{},un=String(m.username||(user.email||"member").split("@")[0]).toLowerCase().replace(/[^a-z0-9_.-]/g,"").slice(0,18)||"member";await saveProfile({username:un,display_name:m.display_name||un,bio:"",avatar_url:"",anniversary_date:""})}}
+async function saveProfile(v){if(remote){let remoteValues={...v};if(remoteValues.anniversary_date==="")remoteValues.anniversary_date=null;let {error}=await client.from("profiles").upsert({id:user.id,...remoteValues,updated_at:new Date().toISOString()},{onConflict:"id"});if(error)throw error}else{let u=getUser(user.id);if(!u)throw Error("Profile missing");let d=getDB();d.users=d.users.map(x=>x.id===u.id?{...x,...v}:x);putDB(d)}await refreshAll()}
+async function refreshLocal(){let u=getUser(user?.id);if(!u)throw Error("Profile missing");profile=u;people=getUsers().filter(x=>x.id!==u.id).map(({password_hash,password_salt,...x})=>x);edges=getDB().edges||[];couple=(getDB().couples||[]).find(c=>c.user_one===u.id||c.user_two===u.id)||null;invite=(getDB().invites||[]).find(i=>i.inviter_id===u.id&&!i.accepted_by&&new Date(i.expires_at)>new Date())||null;memories=(getDB().memories||[]).filter(m=>m.user_id===u.id||(m.visibility==="couple"&&couple&&m.couple_id===couple.id))}
+async function refreshRemote(){if(!remote||!user)return;let p=await client.from("profiles").select("*").eq("id",user.id).maybeSingle();if(p.error)throw p.error;profile=p.data;let ppl=await client.from("profiles").select("*").neq("id",user.id).order("created_at",{ascending:false}).limit(100);if(ppl.error)throw ppl.error;people=ppl.data||[];let ed=await client.from("friendships").select("*").or("user_a.eq."+user.id+",user_b.eq."+user.id);if(ed.error)throw ed.error;edges=ed.data||[];let cp=await client.from("couples").select("*").or("user_one.eq."+user.id+",user_two.eq."+user.id).limit(1);if(cp.error)throw cp.error;couple=cp.data?.[0]||null;let inv=await client.from("pair_invites").select("*").eq("inviter_id",user.id).is("accepted_by",null).gt("expires_at",new Date().toISOString()).order("created_at",{ascending:false}).limit(1);if(inv.error)throw inv.error;invite=inv.data?.[0]||null;let ms=await client.from("memories").select("*").order("created_at",{ascending:false}).limit(50);if(ms.error)throw ms.error;memories=[];for(let m of ms.data||[]){let image_url="";if(m.object_path){let signed=await client.storage.from("memory-photos").createSignedUrl(m.object_path,3600);image_url=signed.data?.signedUrl||""}memories.push({...m,image_url})}}
+async function refreshAll(){if(!user)return;remote?await refreshRemote():await refreshLocal();syncBadge();chrome();if(!$("#appShell").classList.contains("hidden"))render(view)}
+async function bootSession(){setup();syncBadge();if(remote){let {data:{session}}=await client.auth.getSession();if(session?.user){user=session.user;await ensureProfile();await refreshRemote();enter("home")}client.auth.onAuthStateChange((ev,s)=>{if(ev==="SIGNED_OUT"){boot()}else if(ev==="SIGNED_IN"&&s?.user&&!user){user=s.user;setTimeout(async()=>{try{await ensureProfile();await refreshRemote();enter("home")}catch(e){toast(e.message,true)}},0)}})}else{let sid=sessionStorage.getItem(SESSION);if(sid&&getUser(sid)){user={id:sid,email:getUser(sid).email};await refreshLocal();enter("home")}}}
+function guest(){if(remote){user={id:"guest-preview",email:""};profile={id:user.id,username:"guest",display_name:"Demo Guest",bio:"Just visiting this tiny universe.",avatar_url:"",anniversary_date:"",created_at:new Date().toISOString()};people=[];edges=[];memories=[];couple=null;invite=null}else{let idd="guest-local";if(!getUser(idd)){let d=getDB();d.users=d.users||[];d.users.push({id:idd,username:"guest",display_name:"Demo Guest",email:"",bio:"Just visiting this tiny universe.",avatar_url:"",anniversary_date:"",created_at:new Date().toISOString()});putDB(d)}user={id:idd,email:""};refreshLocal()}$("#authDialog").close();enter("home");toast("Guest preview ready. Data stays in this browser.")}
+function chrome(){let p=profile||{};$("#topUsername").textContent=p.username||"member";$("#topAvatar").src=p.avatar_url||AVATAR;$("#friendBadge").textContent=String(edges.filter(e=>e.status==="pending"&&e.requested_by!==user?.id).length);$("#friendBadge").classList.toggle("hidden",!edges.some(e=>e.status==="pending"&&e.requested_by!==user?.id));$("#todayLabel").textContent=new Intl.DateTimeFormat("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date()).toUpperCase()}
+function enter(v){$("#bootScreen").classList.add("hidden");$("#appShell").classList.remove("hidden");$("#mascotButton").classList.remove("hidden");syncBadge();chrome();nav(v)}
+function nav(v){view=v;$(".nav-item").forEach(b=>b.classList.toggle("is-active",b.dataset.section===v));$("#crumbLabel").textContent=({home:"DASHBOARD",friends:"PEOPLE & FRIENDS",pair:"PAIR LINK",chat:"MESSAGES",memories:"MEMORY VAULT",letters:"OPEN WHEN…",profile:"MY PROFILE"})[v]||"DASHBOARD";render(v)}
+function partnerId(){return couple?(couple.user_one===user?.id?couple.user_two:couple.user_one):null}
+function byId(i){return i===user?.id?profile:people.find(p=>p.id===i)||getUser(i)||{id:i,username:"someone",display_name:"Someone"}}
+function edgeFor(i){return edges.find(e=>(e.user_a===user?.id&&e.user_b===i)||(e.user_b===user?.id&&e.user_a===i))}
+function friends(){return edges.filter(e=>e.status==="accepted").map(e=>e.user_a===user?.id?e.user_b:e.user_a)}
+function received(){return edges.filter(e=>e.status==="pending"&&e.requested_by!==user?.id)}
+function sent(){return edges.filter(e=>e.status==="pending"&&e.requested_by===user?.id)}
+function avatar(p,cls="person-avatar"){return p?.avatar_url?'<img class="'+cls+'" src="'+enc(p.avatar_url)+'" alt="" loading="lazy">':'<span class="'+cls+'">'+enc(initial(p?.display_name||p?.username))+'</span>'}
+function pageHead(eyebrow,title,desc,actions=""){return '<div class="page-heading"><div><span class="eyebrow">'+eyebrow+'</span><h1>'+title+'</h1><p>'+desc+'</p></div><div class="heading-actions">'+actions+'</div></div>'}
+function panel(title,sub,content,cls=""){return '<section class="panel '+cls+'"><div class="panel-inner"><div class="panel-header"><div><h2 class="panel-title">'+title+'</h2><p class="panel-subtitle">'+sub+'</p></div></div>'+content+'</div></section>'}
+function quotePanel(){return '<section class="panel quote-panel"><div class="quote-mark">“</div><p class="quote-text" id="quoteText">'+enc(Q[quoteIndex%Q.length])+'</p><div class="quote-meta"><span>DAILY NOTE / NOT A DEADLINE</span><button data-action="quote">another thought ↻</button></div></section>'}
+function moviePanel(){return '<section class="panel"><div class="panel-inner"><div class="panel-header"><div><h2 class="panel-title">Movie night randomizer</h2><p class="panel-subtitle">End the what-should-we-watch loop.</p></div><span class="badge purple">PLAY?</span></div><div id="movieCard" class="movie-card"><div class="movie-poster">'+enc(movie[3])+'</div><div><span class="mono-label">'+enc(movie[1])+'</span><h3>'+enc(movie[0])+'</h3><p>'+enc(movie[2])+'</p><button class="small-btn" data-action="movie">Pick another ↻</button></div></div></div></section>'}
+function daysTogether(){let d=profile?.anniversary_date;if(!d)return null;let s=new Date(d+"T00:00:00");if(Number.isNaN(+s)||s>new Date())return null;return Math.floor((new Date().setHours(0,0,0,0)-s.getTime())/86400000)}
+function memCard(m){let src=m.image_url||m.data_url||"";return '<article class="memory-item">'+(src?'<img class="memory-image" src="'+enc(src)+'" alt="'+enc(m.caption||"Memory")+'" loading="lazy">':'<div class="memory-placeholder">✦</div>')+'<div class="memory-copy"><b>'+enc(m.caption||"A moment worth keeping")+'</b><small>'+enc(m.created_at?new Date(m.created_at).toLocaleDateString():"Just now")+' · '+enc(m.visibility||"private")+'</small><button data-action="delete-memory" data-id="'+enc(m.id)+'" aria-label="Delete memory">×</button></div></article>'}
+function home(){let p=profile||{},partner=partnerId()?byId(partnerId()):null,days=daysTogether(),isPair=!!couple;let stats='<div class="grid grid-three" style="margin-top:15px"><div class="panel stat-card"><div class="stat-top"><span>Saved memories</span><span class="stat-icon">▧</span></div><div class="stat-value">'+String(memories.length).padStart(2,"0")+'</div><div class="stat-foot">LITTLE THINGS, KEPT</div></div><div class="panel stat-card"><div class="stat-top"><span>Your people</span><span class="stat-icon" style="color:var(--lavender);background:#2c2537">♧</span></div><div class="stat-value">'+String(friends().length).padStart(2,"0")+'</div><div class="stat-foot">CONNECTIONS MADE</div></div><div class="panel stat-card"><div class="stat-top"><span>Letters for later</span><span class="stat-icon" style="color:var(--pink);background:#38252e">✉</span></div><div class="stat-value">06</div><div class="stat-foot">OPEN WHEN YOU NEED ONE</div></div></div>';
+let hero='<section class="panel hero-card"><div class="hero-top"><span class="hero-eyebrow">OUR LITTLE UNIVERSE / 001</span><span class="badge">'+(remote?"CLOUD SYNC":"LOCAL MODE")+'</span></div><div><h2>'+(isPair?"Two profiles. One little universe.":"Somewhere between pixels and feelings.")+'</h2><p>'+(isPair?"Your pair link is active. Start collecting the little things that make your story yours.":"A space for photos, tiny notes, and plans that are better when shared.")+'</p></div><div class="hero-bottom"><div style="display:flex;align-items:center"><div class="avatar-stack">'+avatar(p,"avatar-placeholder")+(partner?avatar(partner,"avatar-placeholder"):"")+'</div><span class="hero-status">'+(isPair?"PAIR LINK ACTIVE":"WAITING FOR YOUR PERSON")+'</span></div><button class="small-btn" data-section="pair">'+(isPair?"Open pair space ↗":"Make a pair link ↗")+'</button></div><svg class="hero-illustration" viewBox="0 0 150 90" fill="none" aria-hidden="true"><path d="M15 70C29 17 66 7 79 45S123 81 140 15" stroke="#C8F169" stroke-width="1.5" stroke-dasharray="3 5"/><circle cx="40" cy="31" r="8" fill="#C8F169"/><circle cx="104" cy="57" r="14" stroke="#C8F169"/><path d="M97 57h14M104 50v14" stroke="#C8F169"/><circle cx="140" cy="15" r="3" fill="#C8F169"/></svg></section>';
+let count='<section class="panel countdown-panel"><div class="panel-inner"><div class="panel-header"><div><h2 class="panel-title">Time, kept together</h2><p class="panel-subtitle">A little timeline of your own</p></div><span class="badge purple">♡</span></div>'+(isPair&&days!==null?'<div class="countdown-numbers"><div class="time-unit"><b>'+days+'</b><span>DAYS TOGETHER</span></div><div class="time-unit"><b>'+new Date().getDate()+'</b><span>DAY OF MONTH</span></div><div class="time-unit"><b>'+new Date().getFullYear()+'</b><span>THIS CHAPTER</span></div></div><div class="countdown-date">SINCE '+enc(profile.anniversary_date)+'</div>':'<div class="empty-mini">Choose a date to remember. You can set an anniversary in profile settings.<br><button class="text-btn" data-section="profile">Set a date ↗</button></div>')+'</div></section>';
+let quick='<div class="section-row"><div><h2>Small things to do</h2><p>A little interaction makes this place feel more like yours.</p></div><span class="mono-label">QUICK ACCESS / 04</span></div><div class="grid grid-three"><div class="panel quick-card"><span class="quick-icon" style="background:#2b3420;color:var(--lime)">∞</span><h3>Connect your person</h3><p>Create a code to share privately and link two accounts.</p><button class="text-btn" data-section="pair">Set up pair link ↗</button></div><div class="panel quick-card"><span class="quick-icon" style="background:#30273a;color:var(--lavender)">✉</span><h3>Leave a note for later</h3><p>Open an envelope for the mood you are in right now.</p><button class="text-btn" data-section="letters">Explore letters ↗</button></div><div class="panel quick-card"><span class="quick-icon" style="background:#38262d;color:var(--pink)">▧</span><h3>Save a tiny moment</h3><p>Add a photo and a short caption to your memory vault.</p><button class="text-btn" data-action="upload-memory">Add a memory ↗</button></div></div>';
+return pageHead(new Intl.DateTimeFormat("en",{weekday:"long",month:"long",day:"numeric"}).format(new Date()).toUpperCase()+" — A LITTLE SPACE FOR YOU","Hey, "+enc(p.display_name||p.username||"friend")+'<span style="color:var(--lime)">.</span>',"A small corner for the moments worth keeping. Nothing to rush, nowhere else to be.",'<button class="small-btn" data-section="memories">▧ Memory vault</button><button class="small-btn accent" data-section="pair">∞ Link your person</button>')+'<div class="grid grid-two">'+hero+count+'</div>'+stats+quick+'<div class="grid grid-two" style="margin-top:15px">'+quotePanel()+moviePanel()+'</div><div class="section-row"><div><h2>Recently saved</h2><p>Your most recent pieces of a day.</p></div><button class="text-btn" data-section="memories">All memories ↗</button></div>'+(memories.length?'<div class="memory-grid">'+memories.slice(0,3).map(memCard).join("")+'</div>':'<div class="empty-state"><div class="empty-symbol">▧</div><b>Your memory vault is waiting.</b>Save a photo with a caption. In demo mode, it stays on this device.<br><button class="small-btn accent" style="margin-top:13px" data-action="upload-memory">Add the first memory +</button></div>')}
+function personRow(p){let e=edgeFor(p.id),acts;if(!e)acts='<button class="small-btn accent" data-action="friend-add" data-user="'+enc(p.id)+'">+ Add friend</button>';else if(e.status==="accepted")acts='<span class="badge">✓ FRIENDS</span>';else if(e.requested_by===user.id)acts='<span class="badge purple">REQUEST SENT</span>';else acts='<button class="small-btn accent" data-action="friend-accept" data-id="'+enc(e.id)+'">Accept</button><button class="small-btn" data-action="friend-decline" data-id="'+enc(e.id)+'">Decline</button>';return '<div class="person-row">'+avatar(p)+'<div class="person-info"><b>'+enc(p.display_name||p.username)+'</b><small>@'+enc(p.username)+' · joined '+enc(p.created_at?new Date(p.created_at).toLocaleDateString(undefined,{month:"short",year:"numeric"}):"recently")+'</small></div><div class="person-actions">'+acts+'</div></div>'}
+function friendsPage(){let inc=received(),all=people.filter(p=>p.id!==user.id),q=searchText.toLowerCase(),rows=all.filter(p=>{let ok=(p.username+" "+(p.display_name||"")).toLowerCase().includes(q),e=edgeFor(p.id);return ok&&(filter==="all"||filter==="friends"&&e?.status==="accepted"||filter==="requests"&&e?.status==="pending"&&e.requested_by!==user.id)});return pageHead("PEOPLE / FIND YOUR CORNER","People & friends<span style=\"color:var(--lime)\">.</span>","Find people by username, send a request, or accept one that is waiting for you.",'<span class="badge">'+all.length+' PROFILES</span>')+'<section class="panel"><div class="panel-inner"><div class="search-row"><input id="peopleSearch" class="search-input" value="'+enc(searchText)+'" placeholder="Search username or display name…"><button class="small-btn" data-action="refresh">↻ Refresh</button></div><div class="filter-chips"><button class="filter-chip '+(filter==="all"?"is-active":"")+'" data-filter="all">All profiles</button><button class="filter-chip '+(filter==="friends"?"is-active":"")+'" data-filter="friends">Friends · '+friends().length+'</button><button class="filter-chip '+(filter==="requests"?"is-active":"")+'" data-filter="requests">Requests · '+inc.length+'</button></div>'+(inc.length&&filter!=="friends"?'<div style="margin-bottom:18px"><div class="panel-header"><div><h2 class="panel-title">Waiting for your reply</h2><p class="panel-subtitle">Friend requests are optional.</p></div><span class="badge pink">'+inc.length+' NEW</span></div><div class="list-stack">'+inc.map(e=>personRow(byId(e.requested_by))).join("")+'</div></div>':'')+'<div class="panel-header"><div><h2 class="panel-title">'+(filter==="friends"?"Your friends":filter==="requests"?"Incoming requests":"Discover people")+'</h2><p class="panel-subtitle">'+(remote?"Profiles from the connected database.":"Only accounts in this browser appear in local preview.")+'</p></div></div>'+(rows.length?'<div class="list-stack">'+rows.map(personRow).join("")+'</div>':'<div class="empty-state"><div class="empty-symbol">♧</div><b>'+(remote?"No profiles found yet.":"No other profiles in this browser.")+'</b>'+(remote?"Create another account or search by username.":"Create a second demo account in this browser, or configure Supabase to discover people across devices.")+'</div>')+'</div></section>'}
+function pairPage(){let pid=partnerId(),p=pid?byId(pid):null;let code=invite?'<div class="pair-code"><code>'+enc(invite.code)+'</code><button class="small-btn" data-action="copy-code">Copy</button></div><p style="margin-top:12px;font:9px var(--mono);color:#9ea68f">EXPIRES '+enc(new Date(invite.expires_at).toLocaleString())+'</p>':'<div class="pair-code"><button class="small-btn accent" data-action="make-code">+ Generate invite code</button></div>';let connected='<div class="pair-symbol">∞</div><span class="eyebrow">YOUR SHARED SPACE IS CONNECTED</span><h2>You + '+enc(p?.display_name||p?.username||"your person")+'</h2><p>Your accounts are linked. Start saving moments and keeping a shared timeline.</p><div class="pair-code"><code>LINK ACTIVE</code></div><div style="margin-top:18px"><button class="small-btn" data-section="home">Back to dashboard ↗</button> <button class="small-btn" data-action="unlink">Unlink accounts</button></div>';
+return pageHead("PAIR SYSTEM / LINK YOUR PERSON","Two, in sync<span style=\"color:var(--lime)\">.</span>","A private connection between two accounts. Share the code only with the person you intend to link.",'<span class="badge '+(couple?"":"purple")+'">'+(couple?"LINK ACTIVE":"NOT LINKED")+'</span>')+'<section class="panel pair-hero">'+(couple?connected:'<div class="pair-symbol">∞</div><span class="eyebrow">A SMALL BRIDGE BETWEEN TWO SPACES</span><h2>Make a little universe together.</h2><p>Create a one-time invitation code and send it privately, or enter another account’s code. Codes expire in 24 hours.</p>'+code+'<div class="grid grid-two" style="max-width:620px;margin:22px auto 0;text-align:left"><label class="field">Have a code? Enter it here<input id="pairCodeInput" maxlength="12" placeholder="e.g. 7KQ4ZP"></label><div style="display:flex;align-items:end"><button class="primary-btn" style="margin:0" data-action="accept-code">Connect accounts ↗</button></div></div>')+'</section><div class="pair-steps"><div class="step-card"><span class="step-number">STEP 01 / CREATE</span><h3>Make an invitation</h3><p>Generate a short-lived code for your account. No password is shared.</p></div><div class="step-card"><span class="step-number">STEP 02 / SHARE PRIVATELY</span><h3>Send it to your person</h3><p>Share the code in a private message, never in a public post.</p></div><div class="step-card"><span class="step-number">STEP 03 / CONNECT</span><h3>Enter the code</h3><p>The other person enters the code while signed in.</p></div></div><div class="coming-note" style="margin-top:15px">'+(remote?"Cloud mode: pair codes are validated by the database.":"Demo codes work only between accounts in this browser. Use Supabase for real cross-device linking.")+'</div>'}
+function memoriesPage(){return pageHead("MEMORY VAULT / LITTLE THINGS, KEPT","Keep this moment<span style=\"color:var(--lime)\">.</span>","A photo, a date, a caption you may want to remember.",'<button class="small-btn accent" data-action="upload-memory">+ Add memory</button>')+'<div class="grid grid-two" style="margin-bottom:18px">'+panel("A small reminder","LITTLE THINGS, TOO",'<h2 style="font-size:20px;letter-spacing:-.05em;margin:8px 0">Not every moment needs to be big.</h2><p style="color:var(--muted);font-size:11px;line-height:1.8;margin:0">A blurry picture, a weird snack, a walk, the sky on the way home. Save whatever feels like yours.</p>')+panel("Storage mode",remote?"Cloud storage with signed links":"Compressed and saved locally",'<p style="font-size:10px;line-height:1.7;color:var(--muted);margin:0">'+(remote?"Photos are stored in a private bucket with temporary signed URLs.":"Photos are compressed to fit browser storage. Clearing site data removes demo memories.")+'</p>')+'</div>'+(memories.length?'<div class="memory-grid">'+memories.map(memCard).join("")+'</div>':'<div class="empty-state"><div class="empty-symbol">▧</div><b>Nothing saved here yet.</b>Start with one photo and a short sentence about why it matters.<br><button class="small-btn accent" style="margin-top:13px" data-action="upload-memory">Save a moment +</button></div>')}
+function lettersPage(){return pageHead("OPEN WHEN… / LITTLE NOTES FOR LATER","For your different days<span style=\"color:var(--lavender)\">.</span>","Choose an envelope for the mood you are in. A note, a little transition, and a breath of room.",'<span class="badge purple">06 ENVELOPES</span>')+'<div class="coming-note" style="margin-bottom:18px;border-color:var(--lavender);background:#211d29;color:#c3b9d3">These are starter notes. Personalize the copy in app.js. They open in this page and do not send notifications.</div><div class="letter-grid">'+LETTERS.map(l=>'<button class="letter-card" data-letter="'+l[0]+'"><span class="letter-emoji">'+l[1]+'</span><small>'+enc(l[2])+'</small><h3>'+enc(l[3])+'</h3><p>'+enc(l[4])+'</p><span class="letter-link">OPEN ENVELOPE ↗</span></button>').join("")+'</div>'}
+function chatRecipients(){let list=friends().map(x=>({id:x.id,name:x.display_name||x.username,username:x.username,avatar_url:x.avatar_url||AVATAR,kind:"FRIEND"}));let pid=partnerId(),partner=pid?byId(pid):null;if(partner&&!list.some(x=>x.id===partner.id))list.unshift({id:partner.id,name:partner.display_name||partner.username,username:partner.username,avatar_url:partner.avatar_url||AVATAR,kind:"YOUR PERSON"});return list}
+function chatPage(){let list=chatRecipients();if(!selectedChat&&list.length)selectedChat=list[0].id;let active=list.find(x=>x.id===selectedChat);return pageHead("MESSAGES / SAY IT HERE","A little conversation<span style=\"color:var(--lime)\">.</span>","Chat with an accepted friend or your linked person. Demo messages stay in this browser.",'<span class="badge">'+(remote?"CLOUD CHAT":"LOCAL PREVIEW")+'</span>')+'<div class="chat-layout"><aside class="chat-people"><h3>Your people</h3>'+ (list.length?list.map(x=>'<button type="button" class="chat-person '+(x.id===selectedChat?'is-active':'')+'" data-chat-user="'+enc(x.id)+'"><img class="chat-avatar" src="'+enc(x.avatar_url||AVATAR)+'" alt=""><span><b>'+enc(x.name)+'</b><small>@'+enc(x.username)+' · '+enc(x.kind)+'</small></span></button>').join(""):'<div class="chat-empty">No chats yet. Add a friend and wait until they accept, or link your person first.</div>')+'</aside><section class="chat-room"><div class="chat-room-head"><div><h3>'+(active?enc(active.name):"Choose someone to chat with")+'</h3><span class="mono-label">'+(active?enc(active.kind):"NO CONVERSATION SELECTED")+'</span></div><span class="badge">PRIVATE</span></div><div id="chatMessages" class="chat-messages">'+(active?'<div class="chat-empty">Loading messages…</div>':'<div class="chat-empty">Choose a person on the left to start a conversation.</div>')+'</div>'+(active?'<form id="chatForm" class="chat-compose"><input id="chatInput" maxlength="2000" autocomplete="off" placeholder="Write a message…" aria-label="Message" required><button class="small-btn accent" type="submit">Send ↗</button></form>':'')+'<p class="form-note" style="margin-top:10px">'+(remote?"Messages sync through Supabase.":"Local preview only; messages do not sync across devices.")+'</p></section></div>'}
+async function loadChatMessages(){if(!selectedChat)return;let allowed=chatRecipients().some(x=>x.id===selectedChat);if(!allowed){chatMessages=[];return}if(remote){let {data,error}=await client.from("direct_messages").select("*").or("and(sender_id.eq."+user.id+",recipient_id.eq."+selectedChat+"),and(sender_id.eq."+selectedChat+",recipient_id.eq."+user.id+")").order("created_at",{ascending:true}).limit(200);if(error)throw error;chatMessages=data||[]}else{chatMessages=(getDB().messages||[]).filter(m=>(m.sender_id===user.id&&m.recipient_id===selectedChat)||(m.sender_id===selectedChat&&m.recipient_id===user.id)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))}let root=$("#chatMessages");if(root){root.innerHTML=chatMessages.length?chatMessages.map(m=>'<div class="chat-bubble '+(m.sender_id===user.id?"mine":"")+'">'+enc(m.body)+'<time>'+enc(new Date(m.created_at).toLocaleString())+'</time></div>').join(""):'<div class="chat-empty">No messages yet. Say hello when you are ready.</div>';root.scrollTop=root.scrollHeight}}
+async function sendChat(body){if(!selectedChat||!chatRecipients().some(x=>x.id===selectedChat))throw Error("Choose an accepted friend or linked person first.");if(remote){if(user.id==="guest-preview")throw Error("Log in to send cloud messages.");let {error}=await client.from("direct_messages").insert({sender_id:user.id,recipient_id:selectedChat,body:body.slice(0,2000)});if(error)throw error}else{let d=getDB();d.messages=d.messages||[];d.messages.push({id:id(),sender_id:user.id,recipient_id:selectedChat,body:body.slice(0,2000),created_at:new Date().toISOString()});putDB(d)}}
+function toggleTheme(){let light=document.documentElement.dataset.theme!=="light";document.documentElement.dataset.theme=light?"light":"dark";localStorage.setItem("shorty.memory.theme",light?"light":"dark");let b=$("#themeToggle");if(b){b.innerHTML=light?'☾ <span>Dark mode</span>':'☼ <span>Light mode</span>';b.setAttribute("aria-label",light?"Switch to dark mode":"Switch to light mode")}document.querySelector('meta[name="theme-color"]')?.setAttribute("content",light?"#f5f5ef":"#11130f")}
+function initTheme(){let t=localStorage.getItem("shorty.memory.theme")||"dark";document.documentElement.dataset.theme=t;let b=$("#themeToggle");if(b){b.innerHTML=t==="light"?'☾ <span>Dark mode</span>':'☼ <span>Light mode</span>';b.setAttribute("aria-label",t==="light"?"Switch to dark mode":"Switch to light mode")}}
+function profilePage(){let p=profile||{};return pageHead("IDENTITY / YOUR LITTLE CORNER","My profile<span style=\"color:var(--lime)\">.</span>","Give your space a name, a picture, and a small bit of context.",'<span class="badge">'+(remote?"CLOUD PROFILE":"LOCAL PROFILE")+'</span>')+'<div class="profile-layout"><section class="panel profile-card"><div class="profile-avatar-wrap"><img id="profileAvatar" class="profile-avatar" src="'+enc(p.avatar_url||AVATAR)+'" alt="Your profile photo"><button class="avatar-edit" data-action="avatar" aria-label="Upload profile picture">↥</button></div><h2>'+enc(p.display_name||p.username||"Your name")+'</h2><div class="username">@'+enc(p.username||"member")+'</div><p class="bio">'+enc(p.bio||"A person with a story, a few pixels, and things worth keeping.")+'</p><div class="profile-meta"><div><b>'+friends().length+'</b><small>FRIENDS</small></div><div><b>'+memories.length+'</b><small>MEMORIES</small></div><div><b>'+(couple?"∞":"—")+'</b><small>PAIR</small></div></div></section><section class="panel"><form id="profileForm" class="profile-form"><div class="settings-section"><h3>Basic information</h3><p>Make your profile easy for friends to recognize.</p><div class="form-grid"><label class="field">Display name<input name="display_name" value="'+enc(p.display_name||"")+'" maxlength="32" required></label><label class="field">Username<input name="username" value="'+enc(p.username||"")+'" minlength="3" maxlength="18" pattern="[A-Za-z0-9_.-]+" required><span class="help">3–18 chars: letters, numbers, ., _ or -</span></label></div><label class="field" style="margin-top:13px">A small bio<textarea name="bio" maxlength="240">'+enc(p.bio||"")+'</textarea></label></div><div class="settings-section"><h3>Your timeline</h3><p>Set a date you want the dashboard to remember.</p><label class="field">Anniversary / meaningful date<input name="anniversary_date" type="date" value="'+enc(p.anniversary_date||"")+'" max="'+today()+'"></label></div><div class="settings-section"><h3>Account and privacy</h3><p>'+(remote?"Account authentication is managed by Supabase Auth. Never share your session or confirmation link.":"This profile is browser-local, not a secure server. Use only non-sensitive demo details.")+'</p><div class="coming-note">'+(remote?"Cloud mode enabled. Database access is governed by row-level security.":"Demo mode is for interface testing, not real passwords or private photos.")+'</div></div><div class="settings-section" style="display:flex;justify-content:flex-end"><button class="primary-btn" style="width:auto;min-width:160px" type="submit">Save profile <span>↗</span></button></div></form></section></div>'}
+function render(v){view=v;$$(".nav-item").forEach(b=>b.classList.toggle("is-active",b.dataset.section===v));$("#crumbLabel").textContent=({home:"DASHBOARD",friends:"PEOPLE & FRIENDS",pair:"PAIR LINK",memories:"MEMORY VAULT",letters:"OPEN WHEN…",profile:"MY PROFILE"})[v]||"DASHBOARD";let n=$("#viewRoot");n.innerHTML=v==="home"?home():v==="friends"?friendsPage():v==="pair"?pairPage():v==="chat"?chatPage():v==="memories"?memoriesPage():v==="letters"?lettersPage():profilePage();bindView();if(v==="chat")loadChatMessages().catch(e=>toast(e.message,true))}
+function bindView(){ $("[data-section]",$("#viewRoot")).forEach(b=>b.addEventListener("click",e=>{e.preventDefault();nav(b.dataset.section)}));$$("[data-action]").forEach(b=>b.addEventListener("click",()=>action(b.dataset.action,b)));$$("[data-filter]").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.filter;render("friends")}));$$("[data-letter]").forEach(b=>b.addEventListener("click",()=>openLetter(b.dataset.letter)));let s=$("#peopleSearch");if(s)s.addEventListener("input",()=>{let pos=s.selectionStart;searchText=s.value;render("friends");$("#peopleSearch")?.focus();$("#peopleSearch")?.setSelectionRange(pos,pos)});$("[data-chat-user]").forEach(b=>b.addEventListener("click",()=>{selectedChat=b.dataset.chatUser;chatMessages=[];render("chat")}));let cf=$("#chatForm");if(cf)cf.addEventListener("submit",async e=>{e.preventDefault();let input=$("#chatInput"),body=input.value.trim();if(!body||!selectedChat)return;try{await sendChat(body);input.value="";await loadChatMessages();render("chat")}catch(err){toast(err.message,true)}});let f=$("#profileForm");if(f)f.addEventListener("submit",async e=>{e.preventDefault();let d=new FormData(f),v={display_name:String(d.get("display_name")).trim(),username:String(d.get("username")).trim().toLowerCase(),bio:String(d.get("bio")).trim(),anniversary_date:String(d.get("anniversary_date")||"")};if(!/^[a-z0-9_.-]{3,18}$/.test(v.username))return toast("Username must be 3–18 valid characters.",true);try{await saveProfile(v);toast("Profile saved.")}catch(err){toast(err.message,true)}})}
+async function action(a,b){try{if(a==="quote"){quoteIndex++;$("#quoteText").textContent=Q[quoteIndex%Q.length]}else if(a==="movie"){let choices=MOVIES.filter(m=>m[0]!==movie[0]);movie=choices[Math.floor(Math.random()*choices.length)];let c=$("#movieCard");c.innerHTML='<div class="movie-poster">'+enc(movie[3])+'</div><div><span class="mono-label">'+enc(movie[1])+'</span><h3>'+enc(movie[0])+'</h3><p>'+enc(movie[2])+'</p><button class="small-btn" data-action="movie">Pick another ↻</button></div>';c.querySelector("[data-action]")?.addEventListener("click",()=>action("movie",c.querySelector("[data-action]")))}else if(a==="upload-memory")$("#memoryFileInput").click();else if(a==="avatar")$("#avatarFileInput").click();else if(a==="friend-add")await sendFriend(b.dataset.user);else if(a==="friend-accept")await friendRequest(b.dataset.id,"accepted");else if(a==="friend-decline")await friendRequest(b.dataset.id,"declined");else if(a==="refresh"){await refreshAll();toast("Profiles refreshed.")}else if(a==="make-code")await createCode();else if(a==="copy-code"){try{await navigator.clipboard.writeText(invite.code);toast("Code copied. Share it privately.")}catch{toast("Pair code: "+invite.code)}}else if(a==="accept-code")await acceptCode();else if(a==="unlink"){if(confirm("Unlink this pair?"))await unlink()}else if(a==="delete-memory"&&confirm("Delete this memory?"))await deleteMemory(b.dataset.id)}catch(e){toast(e.message||"Action failed.",true)}}
+async function sendFriend(other){if(!other||other===user.id)return;if(remote&&user.id==="guest-preview")throw Error("Log in to send real requests.");if(remote){let [a,b]=[user.id,other].sort();let {error}=await client.from("friendships").insert({user_a:a,user_b:b,requested_by:user.id,status:"pending"});if(error)throw error}else{let d=getDB();d.edges=d.edges||[];if(d.edges.some(e=>(e.user_a===user.id&&e.user_b===other||e.user_b===user.id&&e.user_a===other)&&e.status!=="declined"))return toast("A request or friendship already exists.");let [a,b]=[user.id,other].sort();d.edges.push({id:id(),user_a:a,user_b:b,requested_by:user.id,status:"pending",created_at:new Date().toISOString()});putDB(d)}await refreshAll();toast("Friend request sent.")}
+async function friendRequest(edgeId,status){let e=edges.find(x=>x.id===edgeId);if(!e)return;if(remote){let r=status==="declined"?await client.from("friendships").delete().eq("id",edgeId):await client.from("friendships").update({status}).eq("id",edgeId);if(r.error)throw r.error}else{let d=getDB();d.edges=status==="declined"?(d.edges||[]).filter(x=>x.id!==edgeId):(d.edges||[]).map(x=>x.id===edgeId?{...x,status:"accepted"}:x);putDB(d)}await refreshAll();toast(status==="accepted"?"Friend added.":"Request dismissed.")}
+function makeCode(){let ch="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let b=crypto.getRandomValues(new Uint8Array(6));return [...b].map(x=>ch[x%ch.length]).join("")}
+async function createCode(){if(couple)return toast("This account is already linked.");if(remote&&user.id==="guest-preview")throw Error("Log in to create a shared pair link.");let code=makeCode(),expires=new Date(Date.now()+86400000).toISOString();if(remote){let {error}=await client.from("pair_invites").insert({inviter_id:user.id,code,expires_at:expires});if(error)throw error}else{let d=getDB();d.invites=(d.invites||[]).filter(i=>i.inviter_id!==user.id||i.accepted_by||new Date(i.expires_at)<new Date());d.invites.push({id:id(),inviter_id:user.id,code,expires_at:expires,accepted_by:null,created_at:new Date().toISOString()});putDB(d)}await refreshAll();toast("Invite code created. Share privately.")}
+async function acceptCode(){let code=String($("#pairCodeInput")?.value||"").trim().toUpperCase();if(!code)throw Error("Enter a pair code first.");if(couple)throw Error("This account is already linked.");if(remote){if(user.id==="guest-preview")throw Error("Log in to accept a shared link.");let {data,error}=await client.rpc("accept_pair_code",{code_input:code});if(error)throw error;if(!data)throw Error("Code invalid, expired or already used.")}else{let d=getDB(),inv=(d.invites||[]).find(i=>i.code===code&&!i.accepted_by&&new Date(i.expires_at)>new Date()&&i.inviter_id!==user.id);if(!inv)throw Error("Code invalid, expired, already used, or belongs to this account.");if((d.couples||[]).some(c=>[c.user_one,c.user_two].includes(inv.inviter_id)||[c.user_one,c.user_two].includes(user.id)))throw Error("One of these accounts is already paired.");inv.accepted_by=user.id;d.couples=d.couples||[];d.couples.push({id:id(),user_one:inv.inviter_id,user_two:user.id,linked_at:new Date().toISOString()});putDB(d)}await refreshAll();toast("Pair link activated.")}
+async function unlink(){if(remote){let {error}=await client.from("couples").delete().eq("id",couple.id);if(error)throw error}else{let d=getDB();d.couples=(d.couples||[]).filter(c=>c.id!==couple.id);putDB(d)}await refreshAll();toast("Pair link removed.")}
+async function imageData(file,max=760,q=.68){if(!file||!/^image\/(png|jpeg|webp)$/.test(file.type))throw Error("Choose a PNG, JPG, or WebP image.");if(file.size>12*1024*1024)throw Error("Choose an image smaller than 12 MB.");let src=await new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(Error("Could not read image."));r.readAsDataURL(file)});let im=new Image();await new Promise((res,rej)=>{im.onload=res;im.onerror=()=>rej(Error("Invalid image."));im.src=src});let scale=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(im.width*scale));c.height=Math.max(1,Math.round(im.height*scale));c.getContext("2d").drawImage(im,0,0,c.width,c.height);return c.toDataURL("image/jpeg",q)}
+async function uploadAvatar(file){try{if(remote){if(user.id==="guest-preview")throw Error("Log in before uploading an avatar.");let ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg",path=user.id+"/"+id()+"."+ext,{error}=await client.storage.from("avatars").upload(path,file,{contentType:file.type});if(error)throw error;let {data}=client.storage.from("avatars").getPublicUrl(path);await saveProfile({username:profile.username,display_name:profile.display_name,bio:profile.bio||"",avatar_url:data.publicUrl,anniversary_date:profile.anniversary_date||""})}else{let src=await imageData(file,420,.8);await saveProfile({username:profile.username,display_name:profile.display_name,bio:profile.bio||"",avatar_url:src,anniversary_date:profile.anniversary_date||""})}toast("Profile picture updated.")}catch(e){toast(e.message,true)}}
+async function uploadMemories(files){for(let file of [...files].slice(0,5)){try{let caption=prompt("A short caption for "+file.name+" (optional):","");if(caption===null)continue;if(remote){if(user.id==="guest-preview")throw Error("Log in before saving a memory.");let ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg",path=user.id+"/"+id()+"."+ext,up=await client.storage.from("memory-photos").upload(path,file,{contentType:file.type});if(up.error)throw up.error;let {error}=await client.from("memories").insert({user_id:user.id,couple_id:couple?.id||null,caption:caption.trim().slice(0,160),object_path:path,visibility:couple?"couple":"private"});if(error){await client.storage.from("memory-photos").remove([path]);throw error}}else{let src=await imageData(file);let d=getDB();d.memories=d.memories||[];d.memories.unshift({id:id(),user_id:user.id,couple_id:couple?.id||null,caption:caption.trim().slice(0,160),data_url:src,visibility:couple?"couple":"private",created_at:new Date().toISOString()});d.memories=d.memories.slice(0,10);putDB(d)}}catch(e){toast(e.message,true)}}await refreshAll();toast("Memory vault updated.")}
+async function deleteMemory(memId){let m=memories.find(x=>x.id===memId);if(!m)return;if(remote){let {error}=await client.from("memories").delete().eq("id",memId);if(error)throw error;if(m.object_path)await client.storage.from("memory-photos").remove([m.object_path])}else{let d=getDB();d.memories=(d.memories||[]).filter(x=>x.id!==memId);putDB(d)}await refreshAll();toast("Memory deleted.")}
+function openLetter(idd){let l=LETTERS.find(x=>x[0]===idd);if(!l)return;$("#letterTag").textContent=l[2];$("#letterTitle").textContent=l[3];$("#letterMessage").textContent=l[5];$("#letterDialog").showModal()}
+const mascot=["System message: you are doing better than you think.","Shorty.exe recommends a five-minute brain reboot. No updates required.","A reminder from the pixel department: you are allowed to start small.","Current status: still learning, still growing, still worth cheering for.","Achievement unlocked: you made it to this moment.","The cat requests one snack break.","You do not have to earn your rest. It is part of the operating system."];
+function newMascot(){$("#mascotMessage").textContent=mascot[Math.floor(Math.random()*mascot.length)]}
+async function logout(){try{if(remote)await client.auth.signOut()}catch(e){toast(e.message,true)}user=null;profile=null;sessionStorage.removeItem(SESSION);boot();terminal("[SESSION] Signed out. Memory core is idle.")}
+function bind(){ $(".nav-item").forEach(b=>b.addEventListener("click",()=>nav(b.dataset.section)));$(".side-logo").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();nav("home")}));$("#terminalForm").addEventListener("submit",e=>{e.preventDefault();cmd($("#terminalInput").value)});$("#terminalHelp").addEventListener("click",()=>cmd("help"));$("#themeToggle").addEventListener("click",toggleTheme);$("#guideToggle")?.addEventListener("click",()=>{let g=$(".quick-guide");if(!g)return;g.classList.toggle("guide-collapsed");let hide=g.classList.contains("guide-collapsed");g.querySelector("ol").classList.toggle("hidden",hide);$("#guideToggle").textContent=hide?"Show guide +":"Hide guide −"});$("#loginForm").addEventListener("submit",e=>{e.preventDefault();login(e.currentTarget)});$("#registerForm").addEventListener("submit",e=>{e.preventDefault();register(e.currentTarget)});$$(".auth-tab").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.authTab)));$$("[data-close-auth]").forEach(b=>b.addEventListener("click",()=>$("#authDialog").close()));$$("[data-close-letter]").forEach(b=>b.addEventListener("click",()=>$("#letterDialog").close()));$("#guestButton").addEventListener("click",guest);$("#logoutButton").addEventListener("click",logout);$("#backToTerminal").addEventListener("click",boot);$("#topProfileButton").addEventListener("click",()=>nav("profile"));$("#mascotButton").addEventListener("click",()=>{$("#mascotBubble").classList.toggle("hidden");if(!$("#mascotBubble").classList.contains("hidden"))newMascot()});$("#closeMascotBubble").addEventListener("click",()=>$("#mascotBubble").classList.add("hidden"));$("#newMascotMessage").addEventListener("click",newMascot);$("#avatarFileInput").addEventListener("change",async e=>{if(e.target.files?.[0])await uploadAvatar(e.target.files[0]);e.target.value=""});$("#memoryFileInput").addEventListener("change",async e=>{if(e.target.files?.length)await uploadMemories(e.target.files);e.target.value=""});document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#mascotBubble").classList.add("hidden");if(e.key==="/"&&$("#appShell").classList.contains("hidden")&&!$("#authDialog").open&&document.activeElement!==$("#terminalInput")){e.preventDefault();$("#terminalInput").focus()}})}
+async function start(){initTheme();bind();setInterval(()=>{if($("#todayLabel"))$("#todayLabel").textContent=new Intl.DateTimeFormat("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date()).toUpperCase()},1000);$("#terminalInput").focus();try{await bootSession()}catch(e){console.error(e);toast("Could not initialize. Check setup instructions.",true)}}
+start();
+})();
