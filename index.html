@@ -9,10 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20261019-2">
+  <link rel="stylesheet" href="./styles.css?v=20261019-3">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js?v=20261019-2"></script>
-  <script src="./app.js?v=20261019-2" defer></script>
+  <script src="./config.js?v=20261019-3"></script>
+  <script src="./app.js?v=20261019-3" defer></script>
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -34,7 +34,7 @@
           <p><span class="term-muted">[BOOT]</span> Checking the soft things... <span class="term-ok">FOUND</span></p>
           <p class="term-hint">Type <code>help</code> to see available commands.</p>
         </div>
-        <form id="terminalForm" class="terminal-prompt" autocomplete="off" onsubmit="return false">
+        <form id="terminalForm" class="terminal-prompt" autocomplete="off">
           <label for="terminalInput"><span class="prompt-label">guest@shorty:~$</span></label>
           <input id="terminalInput" name="command" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="type a command..." aria-label="Terminal command">
           <button class="send-command" type="submit" aria-label="Run command">↵</button>
