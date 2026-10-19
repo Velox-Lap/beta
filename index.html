@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d0b">
+  <title>SHORTY.EXE — Our Little Universe</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <section id="terminal-screen" class="terminal-screen">
+    <div class="terminal-window">
+      <div class="window-bar"><span class="window-dots">● ● ●</span><span>SHORTY SYSTEM // SECURE SHELL</span><span>v1.0.71</span></div>
+      <div class="terminal-body">
+        <pre class="ascii-logo" aria-label="Shorty terminal logo">╭────────────────────────────────────╮
+│       S H O R T Y . E X E          │
+│     our tiny corner of the net     │
+╰────────────────────────────────────╯</pre>
+        <p class="muted">BOOT SEQUENCE COMPLETE <span class="green">[OK]</span></p>
+        <p class="muted">A private universe for two humans and one tiny pixel cat.</p>
+        <p>Try: <code>help</code>, <code>login -u baby</code>, <code>execute love.sh</code></p>
+        <div id="terminal-output" class="terminal-output" aria-live="polite"></div>
+        <form id="terminal-form" class="terminal-input-row" autocomplete="off">
+          <label for="terminal-input">guest@shorty:~$</label>
+          <input id="terminal-input" name="command" aria-label="Terminal command" autofocus spellcheck="false" placeholder="type a command..." maxlength="120">
+          <button type="submit" aria-label="Run command">↵</button>
+        </form>
+        <p class="terminal-hint">DEMO MODE · Type <code>help</code> to see commands</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="app-shell" class="app-shell hidden">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Shorty home"><span class="brand-icon">♡</span><span>shorty<span class="brand-dot">.exe</span></span></a>
+      <div class="user-mini">
+        <div id="mini-avatar" class="avatar avatar-placeholder">♡</div>
+        <div><strong id="mini-name">Guest user</strong><small>connected to your universe</small></div>
+      </div>
+      <p class="nav-label">YOUR SPACE</p>
+      <button class="nav-item active" data-view="home">▦ <span>Dashboard</span></button>
+      <button class="nav-item" data-view="letters">✉ <span>Open when...</span><i>4</i></button>
+      <button class="nav-item" data-view="memories">▧ <span>Memory archive</span></button>
+      <button class="nav-item" data-view="people">⌘ <span>People & friends</span></button>
+      <button class="nav-item" data-view="pair">↔ <span>Pair our accounts</span></button>
+      <div class="sidebar-bottom">
+        <div class="system-status"><span class="status-dot"></span> ALL SYSTEMS FEELING CUTE</div>
+        <button id="logout-button" class="logout-button">↪ Log out</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div><span class="eyebrow">MONDAY, IN OUR LITTLE UNIVERSE</span><h1 id="view-title">Your little universe<span class="pink">.</span></h1></div>
+        <div class="top-actions"><span class="pill"><span class="status-dot"></span> LOCAL MODE</span><button id="profile-open" class="profile-chip"><div id="top-avatar" class="avatar avatar-small avatar-placeholder">♡</div><span id="top-name">Guest user</span><span>⌄</span></button></div>
+      </header>
+
+      <section id="view-home" class="view">
+        <div class="welcome-panel">
+          <div><span class="eyebrow">A SMALL REMINDER</span><h2>Hi, <span id="welcome-name">you</span>.<br>You're someone's favorite notification.</h2><p>This tiny corner of the internet is just for your favorite human(s).</p><button class="button button-light" data-view="letters">Open a letter <span>↗</span></button></div>
+          <div class="welcome-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="pixel-heart">♥</div><span class="spark spark-a">✦</span><span class="spark spark-b">✧</span></div>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon">♡</span><span class="stat-label">OUR TIME</span><strong id="together-counter">Set your date</strong><small id="together-sub">Every moment counts</small><button class="text-button" id="set-date-button">Set start date ↗</button></article>
+          <article class="stat-card"><span class="stat-icon">☻</span><span class="stat-label">TINY COMPANION</span><strong>Shorty is here</strong><small>Your pixel friend has something to say</small><button class="text-button" id="pet-companion">Pet the cat ↗</button></article>
+          <article class="stat-card"><span class="stat-icon">⌁</span><span class="stat-label">PAIR STATUS</span><strong id="pair-status">Not paired yet</strong><small id="pair-sub">Two accounts, one little universe</small><button class="text-button" data-view="pair">Connect accounts ↗</button></article>
+        </div>
+        <div class="content-grid">
+          <article class="panel movie-panel"><div class="panel-heading"><div><span class="eyebrow">TONIGHT'S MISSION</span><h3>What should we watch?</h3></div><span class="panel-emoji">▣</span></div><div id="movie-result" class="movie-result"><span class="movie-tag">MOVIE GENERATOR</span><h2>Pick our next adventure.</h2><p>One click. Zero arguing over the remote.</p></div><button id="movie-button" class="button button-dark">Surprise us ↗</button></article>
+          <article class="panel daily-panel"><div class="panel-heading"><div><span class="eyebrow">PACKET OF THE DAY</span><h3>A little message</h3></div><span class="panel-emoji">✳</span></div><div class="daily-message"><span class="quote-mark">“</span><p id="daily-message">You make the ordinary parts of life feel a little more magical.</p></div><button id="message-button" class="button button-outline">Another message ↻</button></article>
+        </div>
+        <div class="section-heading"><div><span class="eyebrow">QUICK ACCESS</span><h3>Little things, big feelings.</h3></div></div>
+        <div class="quick-grid"><button class="quick-card" data-view="memories"><span>▧</span><strong>Memory archive</strong><small>Keep the tiny moments.</small></button><button class="quick-card" data-view="letters"><span>✉</span><strong>Open when...</strong><small>Letters for every kind of day.</small></button><button class="quick-card" data-view="pair"><span>↔</span><strong>Pair accounts</strong><small>Make this a shared space.</small></button></div>
+      </section>
+
+      <section id="view-letters" class="view hidden">
+        <div class="page-intro"><span class="eyebrow">SEALED WITH PIXELS</span><h2>Open when... <span class="pink">♡</span></h2><p>Choose the envelope that matches the kind of day you're having.</p></div>
+        <div id="letter-grid" class="letter-grid"></div>
+      </section>
+
+      <section id="view-memories" class="view hidden">
+        <div class="page-intro"><span class="eyebrow">PERSONAL ARCHIVE</span><h2>Memory archive<span class="pink">.</span></h2><p>Save a moment before it becomes a blur.</p></div>
+        <form id="memory-form" class="panel form-panel"><label>Memory title<input id="memory-title" required maxlength="80" placeholder="The day we laughed for 20 minutes..."></label><label>Story<textarea id="memory-body" required maxlength="800" placeholder="Write down what you want to remember."></textarea></label><div class="form-row"><label>Date<input id="memory-date" type="date"></label><button class="button button-dark" type="submit">Save memory +</button></div></form>
+        <div id="memory-list" class="memory-list"></div>
+      </section>
+
+      <section id="view-people" class="view hidden">
+        <div class="page-intro"><span class="eyebrow">YOUR LITTLE NETWORK</span><h2>People & friends<span class="pink">.</span></h2><p>Manage your local demo profile and see sample community cards.</p></div>
+        <div class="people-layout"><div class="panel profile-panel"><div id="profile-preview" class="profile-preview avatar-placeholder">♡</div><h3 id="profile-name-heading">Your profile</h3><p id="profile-bio">Still writing your lore...</p><label class="button button-outline upload-label">Upload profile photo<input id="avatar-upload" type="file" accept="image/*" hidden></label><form id="profile-form" class="profile-form"><label>Display name<input id="profile-name" maxlength="40" placeholder="What should we call you?"></label><label>Bio<input id="profile-bio-input" maxlength="120" placeholder="Professional overthinker / cat enthusiast"></label><button class="button button-dark" type="submit">Save profile</button></form></div><div><div class="panel invite-panel"><span class="eyebrow">ADD YOUR PERSON</span><h3>Find your friend</h3><p>In demo mode, enter a display name to add a sample friend locally.</p><form id="friend-form" class="inline-form"><input id="friend-name" required maxlength="40" placeholder="Their display name"><button class="button button-dark">Add</button></form></div><div class="section-heading"><h3>Friends list</h3><span class="pill" id="friend-count">0 FRIENDS</span></div><div id="friend-list" class="friend-list"></div></div></div>
+      </section>
+
+      <section id="view-pair" class="view hidden">
+        <div class="page-intro"><span class="eyebrow">TWO ACCOUNTS, ONE WORLD</span><h2>Pair our accounts<span class="pink">.</span></h2><p>Generate or enter a pairing code to connect your little universes.</p></div>
+        <div class="pair-layout"><article class="panel pair-card"><div class="pair-symbol">↔</div><span class="eyebrow">STEP 01 / YOUR CODE</span><h3>Create a pairing code</h3><p>Share this code with your person. This prototype stores the code only in this browser.</p><div id="pair-code" class="pair-code">------</div><button id="generate-code" class="button button-dark">Generate code</button><button id="copy-code" class="button button-outline">Copy code</button></article><article class="panel pair-card"><div class="pair-symbol">♡</div><span class="eyebrow">STEP 02 / THEIR CODE</span><h3>Enter their code</h3><p>On a real shared service, the other person would need to create a code in their account first.</p><form id="join-pair-form"><input id="join-code" required minlength="6" maxlength="6" placeholder="ABC123" class="code-input"><button class="button button-dark">Try to pair</button></form><p id="pair-feedback" class="feedback" aria-live="polite"></p></article></div>
+      </section>
+
+      <footer class="footer"><span>SHORTY.EXE</span><span>MADE OF PIXELS & SOFT FEELINGS</span><span>LOCAL DEMO BUILD 0.1</span></footer>
+    </main>
+
+    <button id="mascot" class="mascot" aria-label="Talk to Shorty"><span class="mascot-face">ฅ^•ﻌ•^ฅ</span><span class="mascot-status">SHORTY ONLINE</span></button>
+  </div>
+
+  <div id="letter-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="letter-modal-title"><div class="modal-card"><button id="close-letter" class="modal-close" aria-label="Close letter">×</button><div class="modal-envelope">✉</div><span class="eyebrow">A LETTER FOR YOU</span><h2 id="letter-modal-title">Open when...</h2><p id="letter-modal-body"></p><button id="letter-done" class="button button-dark">Keep this close ♡</button></div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
