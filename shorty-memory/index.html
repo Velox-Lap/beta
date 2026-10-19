@@ -42,7 +42,7 @@
         <div class="terminal-footer"><span>UTF-8</span><span>NO BAD DAYS — ONLY DEBUGGING</span><span>ESC / HELP</span></div>
       </div>
     </section>
-    <p class="boot-note">A private little corner of the internet, made with care.</p>
+    <section class="quick-guide" aria-label="First-time guide"><div><span class="eyebrow">FIRST TIME HERE?</span><h2>Three small steps to begin.</h2></div><ol><li><b>Type <code>help</code></b><span>See the available terminal commands.</span></li><li><b>Type <code>login</code> or <code>register</code></b><span>Sign in, create an account, or try the demo guest.</span></li><li><b>Explore the sidebar</b><span>Find your profile, friends, pair link, memories, letters, and chat.</span></li></ol><button id="guideToggle" type="button" class="small-btn">Hide guide −</button></section><p class="boot-note">A private little corner of the internet, made with care.</p>
   </main>
 
   <dialog id="authDialog" class="auth-dialog">
@@ -75,6 +75,7 @@
       <nav class="side-nav" aria-label="Main navigation">
         <button class="nav-item is-active" type="button" data-section="home"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
         <button class="nav-item" type="button" data-section="friends"><span class="nav-icon">♧</span><span>People & friends</span><span id="friendBadge" class="nav-badge hidden">0</span></button>
+        <button class="nav-item" type="button" data-section="chat"><span class="nav-icon">▤</span><span>Messages</span></button>
         <button class="nav-item" type="button" data-section="pair"><span class="nav-icon">∞</span><span>Pair link</span></button>
         <button class="nav-item" type="button" data-section="memories"><span class="nav-icon">▧</span><span>Memory vault</span></button>
         <button class="nav-item" type="button" data-section="letters"><span class="nav-icon">✉</span><span>Open when…</span></button>
@@ -90,7 +91,7 @@
     <section class="workspace">
       <header class="workspace-topbar">
         <div class="breadcrumb"><span>SPACE /</span> <b id="crumbLabel">DASHBOARD</b></div>
-        <div class="top-actions"><span class="clock-label" id="todayLabel"></span><button id="topProfileButton" class="mini-profile" type="button" data-section="profile"><img id="topAvatar" alt="" src=""><span id="topUsername">guest</span><span class="chevron">⌄</span></button></div>
+        <div class="top-actions"><span class="clock-label" id="todayLabel"></span><button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch light/dark mode">☼ <span>Light mode</span></button><button id="topProfileButton" class="mini-profile" type="button" data-section="profile"><img id="topAvatar" alt="" src=""><span id="topUsername">guest</span><span class="chevron">⌄</span></button></div>
       </header>
       <div id="viewRoot" class="view-root" tabindex="-1"></div>
       <footer class="app-footer"><span>SHORTY.MEMORY © 2026</span><span>KEEP THE GOOD THINGS CLOSE.</span><button type="button" id="backToTerminal">↖ TERMINAL</button></footer>
