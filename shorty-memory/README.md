@@ -11,6 +11,8 @@ A retro CRT-inspired little universe for two people. This folder is a standalone
 - Pair invitation codes (24-hour expiry) and pair linking
 - Memory vault with photo upload and captions
 - Animated “Open When…” letters and floating Shorty mascot
+- Direct messages between accepted friends or linked pair members
+- Live date/time display, light/dark theme switch, and first-visit usage guide
 - Browser-local demo mode, plus optional Supabase authentication, database, and storage
 - Supabase schema with Row Level Security policies
 
@@ -55,7 +57,7 @@ Supabase has to be configured separately; the website does not create a cloud pr
 
 The site is static and can be published with GitHub Pages or another static host. For GitHub Pages, set the source to the branch containing this repository and keep the project under \`/shorty-memory/\`. Since this repository is already a public repository, do not commit private data. After setting the Supabase URL allow-list, open:
 
-\`https://velox-lap.github.io/little-garden/shorty-memory/\`
+\`https://velox-lap.github.io/beta/shorty-memory/\`
 
 The exact GitHub Pages URL depends on the Pages settings and successful deployment.
 
@@ -66,3 +68,10 @@ The exact GitHub Pages URL depends on the Pages settings and successful deployme
 - \`config.js\`: public Supabase project settings
 - \`supabase/schema.sql\`: database schema, RLS policies, storage access rules, pair-code RPC
 
+
+
+## Direct messages
+The Messages section supports demo-local conversations and Supabase-backed direct messages. In cloud mode, run the updated supabase/schema.sql to create the direct_messages table and RLS policies. Only accepted friends and linked pair members can send messages. Demo messages remain in the current browser and are not private server-side storage.
+
+## Theme and first-use guide
+Use the Light/Dark toggle in the app header to change themes. The preference is stored in the current browser. The terminal landing page includes a short guide that can be hidden or shown.
