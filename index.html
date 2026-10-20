@@ -8,11 +8,11 @@
   <title>shorty.memory — a little universe for two</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20261019-3">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css?v=20261020-1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./config.js?v=20261019-3"></script>
-  <script src="./app.js?v=20261019-3" defer></script>
+  <script src="./config.js?v=20261020-1"></script>
+  <script src="./app.js?v=20261020-1" defer></script>
 </head>
 <body>
   <div class="scanlines" aria-hidden="true"></div>
@@ -69,17 +69,18 @@
   </dialog>
 
   <div id="appShell" class="app-shell hidden">
+    <div class="system-bar"><strong>✳ SHORTY OS</strong><span>a little operating system for two.</span><span>DEMO MODE / 20 OCT 2026</span></div>
     <aside class="sidebar">
       <a class="side-logo" href="#" data-section="home"><span class="brand-mark">S/M</span><span><b>shorty.memory</b><small>OUR LITTLE UNIVERSE</small></span></a>
       <div class="side-label">WORKSPACE</div>
       <nav class="side-nav" aria-label="Main navigation">
-        <button class="nav-item is-active" type="button" data-section="home"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
-        <button class="nav-item" type="button" data-section="friends"><span class="nav-icon">♧</span><span>People & friends</span><span id="friendBadge" class="nav-badge hidden">0</span></button>
-        <button class="nav-item" type="button" data-section="chat"><span class="nav-icon">▤</span><span>Messages</span></button>
-        <button class="nav-item" type="button" data-section="pair"><span class="nav-icon">∞</span><span>Pair link</span></button>
-        <button class="nav-item" type="button" data-section="memories"><span class="nav-icon">▧</span><span>Memory vault</span></button>
-        <button class="nav-item" type="button" data-section="letters"><span class="nav-icon">✉</span><span>Open when…</span></button>
-        <button class="nav-item" type="button" data-section="profile"><span class="nav-icon">◉</span><span>My profile</span></button>
+        <button class="nav-item is-active" type="button" data-section="home"><span class="nav-icon">⌂</span><span>หน้าหลัก</span></button>
+        <button class="nav-item" type="button" data-section="friends"><span class="nav-icon">♧</span><span>เพื่อนของเรา</span><span id="friendBadge" class="nav-badge hidden">0</span></button>
+        <button class="nav-item" type="button" data-section="chat"><span class="nav-icon">▤</span><span>จดหมายแชต</span></button>
+        <button class="nav-item" type="button" data-section="pair"><span class="nav-icon">∞</span><span>เชื่อมต่อคู่</span></button>
+        <button class="nav-item" type="button" data-section="memories"><span class="nav-icon">▧</span><span>คลังความทรงจำ</span></button>
+        <button class="nav-item" type="button" data-section="letters"><span class="nav-icon">✉</span><span>จดหมายถึงเธอ</span></button>
+        <button class="nav-item" type="button" data-section="profile"><span class="nav-icon">◉</span><span>โปรไฟล์</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="sync-card"><span class="sync-dot"></span><div><b id="syncLabel">LOCAL PREVIEW</b><small id="syncDetail">Data stays in this browser</small></div></div>
