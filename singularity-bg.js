@@ -1,3 +1,5 @@
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
 /* VELOX / SHORTY.MEMORY — cybernetic black-hole ambience
    Decorative background only: no app state, auth, database, or terminal hooks. */
 (() => {
@@ -149,10 +151,12 @@
     function onScroll() {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       scrollProgress = max > 0 ? clamp(window.scrollY / max, 0, 1) : 0;
+      if (reduceMotion) render(performance.now());
     }
     function onPointer(e) {
       targetX = (e.clientX / Math.max(1, width) - .5) * 2;
       targetY = (e.clientY / Math.max(1, height) - .5) * 2;
+      if (reduceMotion) render(performance.now());
     }
     window.addEventListener("resize", resize, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -160,7 +164,7 @@
     onScroll();
 
     function render(now) {
-      raf = requestAnimationFrame(render);
+      if (!reduceMotion) raf = requestAnimationFrame(render);
       if (document.hidden) return;
       const delta = Math.min(.05, clock.last ? (now - clock.last) / 1000 : .016);
       clock.last = now;
@@ -185,15 +189,15 @@
       renderer.render(scene, camera);
     }
     if (reduceMotion) {
-      // One stable frame: no continuous animation when reduced motion is requested.
-      disk.material.uniforms.uTime.value = 0;
-      renderer.render(scene, camera);
+      // Scroll and pointer still update the scene, but no perpetual animation runs.
+      render(performance.now());
     } else {
       raf = requestAnimationFrame(render);
     }
     document.addEventListener("visibilitychange", () => {
       if (document.hidden && raf) cancelAnimationFrame(raf);
       else if (!document.hidden && !reduceMotion) { clock.last = 0; raf = requestAnimationFrame(render); }
+      else if (!document.hidden && reduceMotion) render(performance.now());
     });
   } catch (error) {
     // If WebGL/CDN is unavailable, leave the existing interface fully functional.
