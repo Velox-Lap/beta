@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "index.html"
+      - "observatory.html"
+      - "observatory.js"
       - "styles.css"
       - "app.js"
       - "config.js"
@@ -13,6 +15,8 @@ on:
   pull_request:
     paths:
       - "index.html"
+      - "observatory.html"
+      - "observatory.js"
       - "styles.css"
       - "app.js"
       - "config.js"
@@ -37,6 +41,7 @@ jobs:
         run: |
           node --check app.js
           node --check config.js
+          node --input-type=module --check < observatory.js
           node --check shorty-memory/app.js
           node --check shorty-memory/config.js
       - name: Test terminal submit behavior
