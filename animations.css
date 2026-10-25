@@ -135,7 +135,7 @@ body::before {
   aspect-ratio: 1;
   right: clamp(10px, 5vw, 76px);
   top: clamp(92px, 17vh, 190px);
-  z-index: 1;
+  z-index: 4;
   pointer-events: none;
   perspective: 900px;
   transform-style: preserve-3d;
@@ -176,8 +176,8 @@ body::before {
 .orbit-label { position:absolute; bottom:2%; left:50%; transform:translateX(-50%) translateZ(35px); font:9px/1 "IBM Plex Mono",monospace; letter-spacing:.18em; color:rgba(210,241,166,.7); white-space:nowrap; }
 @keyframes orbitFloat { 0%,100% { transform:translateY(0) rotate(-3deg); } 50% { transform:translateY(-9px) rotate(3deg); } }
 .shorty-visuals-muted .shorty-3d-orbit { opacity:0 !important; }
-@media (max-width: 760px) {
-  .shorty-3d-orbit { width:clamp(115px, 30vw, 165px); top:82px; right:-22px; opacity:.44; }
+@media (max-width: 1024px) {
+  .shorty-3d-orbit { width:clamp(112px, 17vw, 145px); top:78px; right:8px; opacity:.76; }
   .orbit-label { display:none; }
 }
 @media (prefers-reduced-motion: reduce) {
