@@ -188,9 +188,13 @@ body::before {
 
 /* SHORTY ORBIT v2 — richer lighting, atmosphere and layered orbital motion */
 .shorty-3d-orbit {
+  position: absolute !important;
+  top: clamp(90px, 13vh, 150px) !important;
+  right: clamp(14px, 4vw, 60px) !important;
   width: clamp(190px, 25vw, 340px);
   filter: drop-shadow(0 20px 34px rgba(0,0,0,.24));
   isolation: isolate;
+  pointer-events: none;
 }
 .shorty-3d-orbit::before {
   content:""; position:absolute; inset:5%; border-radius:50%;
@@ -280,4 +284,24 @@ body::before {
 }
 @media (prefers-reduced-motion:reduce) {
   .shorty-3d-orbit::before,.orbit-ring,.orbit-moon { animation:none !important; }
+}
+
+
+/* Anchor the 3D planet to the page rather than the viewport */
+html, body { position: relative; }
+.shorty-3d-orbit {
+  position: absolute !important;
+}
+@media (max-width:1024px) {
+  .shorty-3d-orbit {
+    position: absolute !important;
+    top: 78px !important;
+    right: 8px !important;
+  }
+}
+@media (max-width:520px) {
+  .shorty-3d-orbit {
+    top: 72px !important;
+    right: -12px !important;
+  }
 }
