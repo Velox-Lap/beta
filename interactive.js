@@ -94,6 +94,38 @@
     }, { passive: true });
   }
 
+  // CSS 3D orbital object: a lightweight, original interactive scene (no WebGL dependency).
+  const orbit = document.createElement("div");
+  orbit.className = "shorty-3d-orbit";
+  orbit.setAttribute("aria-hidden", "true");
+  orbit.innerHTML = '<div class="orbit-core"><div class="orbit-continent"></div><span class="orbit-crater crater-a"></span><span class="orbit-crater crater-b"></span><span class="orbit-crater crater-c"></span></div><i class="orbit-ring ring-one"></i><i class="orbit-ring ring-two"></i><i class="orbit-moon"></i><span class="orbit-label">MEMORY / 3D</span>';
+  document.body.append(orbit);
+  let orbitX = 0, orbitY = 0, orbitTargetX = 0, orbitTargetY = 0;
+  if (!reduceMotion) {
+    const orbitFrame = () => {
+      orbitX += (orbitTargetX - orbitX) * .07;
+      orbitY += (orbitTargetY - orbitY) * .07;
+      orbit.style.setProperty("--orbit-tilt-x", orbitX + "deg");
+      orbit.style.setProperty("--orbit-tilt-y", orbitY + "deg");
+      requestAnimationFrame(orbitFrame);
+    };
+    orbitFrame();
+    if (!coarsePointer) {
+      window.addEventListener("pointermove", e => {
+        orbitTargetY = ((e.clientX / window.innerWidth) - .5) * 20;
+        orbitTargetX = (.5 - (e.clientY / window.innerHeight)) * 16;
+      }, { passive: true });
+    } else {
+      let touchStart = null;
+      orbit.addEventListener("touchstart", e => { touchStart = e.touches[0] ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : null; }, {passive:true});
+      orbit.addEventListener("touchmove", e => {
+        if (!touchStart || !e.touches[0]) return;
+        orbitTargetY = Math.max(-18, Math.min(18, (e.touches[0].clientX-touchStart.x)*.18));
+        orbitTargetX = Math.max(-14, Math.min(14, (touchStart.y-e.touches[0].clientY)*.18));
+      }, {passive:true});
+    }
+  }
+
   // Scroll progress indicator; works with both the landing page and dashboard.
   const progress = document.createElement("div");
   progress.className = "shorty-scroll-progress";
