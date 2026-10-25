@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#020106">
+<meta name="description" content="VELOX Quantum Singularity Observatory — interactive 3D black-hole mission lab.">
+<title>VELOX — Quantum Singularity Observatory</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+:root{color-scheme:dark;--bg:#020106;--panel:rgba(8,9,22,.96);--line:rgba(190,175,245,.28);--hot:#ffb48f;--violet:#d4b2ff;--muted:#9292af;--mint:#88e8cb}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:#f5f2ff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+body{isolation:isolate}
+button,select,input{font:inherit}
+#space{position:fixed;inset:0;display:block;width:100%;height:100%;outline:none;touch-action:none;cursor:grab;z-index:0}
+#space:active{cursor:grabbing}
+.vignette{position:fixed;z-index:1;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 14%,rgba(1,2,8,.28) 50%,rgba(1,2,8,.88) 100%),linear-gradient(180deg,rgba(2,2,8,.38),transparent 16%,transparent 84%,rgba(2,2,8,.58))}
+.topbar{position:fixed;z-index:4;top:max(18px,env(safe-area-inset-top));left:clamp(16px,3.2vw,42px);right:clamp(16px,3.2vw,42px);display:flex;justify-content:space-between;align-items:flex-start;gap:15px;pointer-events:none}
+.brand{text-shadow:0 2px 30px #000;pointer-events:auto}
+.eyebrow{display:flex;align-items:center;gap:9px;margin-bottom:11px;color:#d4b2ff;font-size:9px;font-weight:600;letter-spacing:.25em}
+.brand-mark{width:18px;height:18px;position:relative;border:1px solid rgba(255,180,143,.85);border-radius:50%;display:inline-block;flex:0 0 auto}
+.brand-mark:before{content:"";position:absolute;left:-4px;right:-4px;top:8px;height:1px;transform:rotate(-38deg);background:#ffb48f;box-shadow:0 0 12px #ffb48f}
+h1{margin:0;font-size:clamp(25px,4vw,50px);line-height:.94;font-weight:250;letter-spacing:clamp(3px,.8vw,9px)}
+.subtitle{margin-top:11px;color:#9a9ab8;font-size:8px;letter-spacing:.17em}
+.subtitle strong{color:#e2cfff;font-weight:500}
+.status{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;background:rgba(7,8,22,.85);padding:9px 13px;color:#d0cce6;font-size:8px;letter-spacing:.12em;backdrop-filter:blur(16px);white-space:nowrap;pointer-events:auto}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px rgba(136,232,203,.7)}
+.back-link{display:inline-flex;align-items:center;gap:7px;color:#d0cce6;text-decoration:none;border:1px solid var(--line);padding:8px 11px;margin-top:13px;background:rgba(7,8,22,.75);font-size:8px;letter-spacing:.09em}
+.back-link:hover{border-color:var(--hot);color:white}
+.panel{position:fixed;z-index:5;top:145px;right:clamp(14px,3.2vw,42px);width:330px;max-height:calc(100dvh - 215px);overflow:auto;padding:17px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 25px 80px rgba(0,0,0,.6);backdrop-filter:blur(24px);scrollbar-width:thin;scrollbar-color:rgba(180,166,230,.3) transparent}
+.panel.closed{display:none!important}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.panel-kicker{color:#e0ab8f;font-size:8px;letter-spacing:.2em}
+.panel h2{margin:4px 0 0;font-size:12px;font-weight:600;letter-spacing:.15em}
+.section{border-top:1px solid rgba(190,175,245,.15);padding-top:12px;margin-top:12px}
+.section-title{margin-bottom:9px;color:#8888a8;font-size:8px;font-weight:700;letter-spacing:.18em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+button,select{min-height:34px;border:1px solid var(--line);border-radius:6px;padding:0 9px;background:rgba(22,18,42,.85);color:#eae5fc;font-size:8px;letter-spacing:.07em;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s}
+button:hover,button.active{border-color:rgba(255,180,145,.8);background:rgba(105,62,110,.6);box-shadow:0 0 12px rgba(212,178,255,.2)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-offset:3px}
+select{width:100%;min-height:38px}
+.control{margin-top:12px}
+.control-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;color:#d0cee4;font-size:9px}
+.value{color:var(--hot);font-variant-numeric:tabular-nums}
+input[type=range]{display:block;width:100%;height:3px;appearance:none;border-radius:9px;background:linear-gradient(90deg,#b892e8,#ffb48f);cursor:pointer}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border:2px solid #141026;border-radius:50%;background:#ffb48f;box-shadow:0 0 8px rgba(255,180,143,.6)}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;border:2px solid #141026;border-radius:50%;background:#ffb48f}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.check{display:flex;align-items:center;gap:7px;color:#c4c2dc;font-size:9px;cursor:pointer}
+.check input{width:13px;height:13px;accent-color:#d4b2ff}
+.note{margin:11px 0 0;color:#777994;font-size:8px;line-height:1.6}
+#labels-overlay{position:fixed;inset:0;z-index:2;pointer-events:none}
+.sci-label{position:absolute;transform:translate(-50%,-50%);background:rgba(7,8,22,.82);border:1px solid rgba(190,175,245,.4);padding:5px 8px;border-radius:4px;font-size:7px;letter-spacing:.12em;color:#d4b2ff;backdrop-filter:blur(8px);pointer-events:auto;cursor:pointer;white-space:nowrap;transition:transform .2s,background .2s}
+.sci-label:hover{background:rgba(105,62,110,.8);border-color:var(--hot);color:#fff;transform:translate(-50%,-50%) scale(1.04)}
+.info-modal{position:fixed;z-index:10;bottom:92px;left:50%;transform:translateX(-50%) translateY(15px);width:min(470px,calc(100vw - 30px));background:rgba(10,11,28,.96);border:1px solid var(--line);border-radius:10px;padding:17px 20px;box-shadow:0 20px 50px #000b;opacity:0;pointer-events:none;transition:all .25s}
+.info-modal.active{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.info-title{color:var(--hot);font-size:10px;font-weight:700;letter-spacing:.14em;margin-bottom:7px;padding-right:20px}
+.info-desc{color:#d0cce6;font-size:10px;line-height:1.7;margin:0}
+.info-close{position:absolute;top:7px;right:8px;background:none;border:0;color:#9a9ab8;min-height:26px}
+.hud-telemetry{position:fixed;z-index:3;bottom:90px;left:clamp(16px,3.2vw,42px);display:flex;gap:10px;pointer-events:none}
+.hud-card{background:rgba(7,8,22,.88);border:1px solid var(--line);border-radius:8px;padding:11px 13px;backdrop-filter:blur(14px);pointer-events:auto;width:218px}
+.hud-card-title{font-size:7px;color:var(--hot);letter-spacing:.15em;margin-bottom:8px;font-weight:700}
+.hud-graph{width:100%;height:43px;background:#0006;border:1px solid rgba(190,175,245,.15);border-radius:3px;overflow:hidden}
+.hud-graph svg{width:100%;height:100%}
+.bottom{position:fixed;z-index:4;left:clamp(16px,3.2vw,42px);right:clamp(16px,3.2vw,42px);bottom:max(15px,env(safe-area-inset-bottom));display:flex;align-items:flex-end;justify-content:space-between;gap:14px;pointer-events:none}
+.metrics{display:flex;pointer-events:auto;background:rgba(7,8,22,.8);padding:8px 11px;border:1px solid var(--line);border-radius:8px;backdrop-filter:blur(12px)}
+.metric{min-width:74px;padding:0 9px;border-left:1px solid var(--line)}
+.metric:first-child{padding-left:0;border-left:0}
+.metric-label{color:#787a9d;font-size:7px;letter-spacing:.1em;margin-bottom:4px}
+.metric-value{color:#f0ecff;font-size:14px;font-weight:300;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;pointer-events:auto}
+.toolbar button{min-height:37px}
+.hint-banner{position:fixed;z-index:3;top:95px;left:50%;transform:translateX(-50%);background:rgba(15,12,32,.84);border:1px solid var(--line);padding:7px 13px;border-radius:20px;font-size:7px;letter-spacing:.13em;color:#d0cce6;backdrop-filter:blur(10px);pointer-events:none}
+@media(max-width:900px){
+ .hud-telemetry,.metrics,.hint-banner{display:none}
+ .panel{top:145px;right:10px;width:min(290px,calc(100vw - 20px));max-height:calc(100dvh - 220px);display:none}
+ .panel.open{display:block}
+ .panel.closed{display:none!important}
+ .topbar{top:max(12px,env(safe-area-inset-top));left:12px;right:12px}
+ .brand h1{font-size:clamp(22px,6vw,34px);letter-spacing:3px}
+ .eyebrow{font-size:7px;margin-bottom:7px}
+ .subtitle{font-size:7px;letter-spacing:.08em}
+ .status{font-size:7px;padding:8px}
+ .back-link{margin-top:9px;font-size:7px;padding:7px}
+ .bottom{left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));align-items:flex-end}
+ .toolbar{gap:5px;max-width:100%}
+ .toolbar button{min-height:34px;padding:0 8px;font-size:7px}
+ .info-modal{bottom:70px}
+ .sci-label{font-size:6px;padding:4px 5px;letter-spacing:.04em}
+}
+@media(max-width:480px){
+ .status{max-width:122px;white-space:normal;line-height:1.35}
+ .panel{top:132px;max-height:calc(100dvh - 185px);padding:13px}
+ .bottom{display:block}
+ .toolbar{justify-content:center}
+ .toolbar button{flex:1}
+ .sci-label[data-target=jets]{top:25%}
+ .sci-label[data-target=photon]{top:42%;left:28%}
+ .sci-label[data-target=disk]{top:63%;left:77%}
+ .sci-label[data-target=horizon]{top:51%;left:52%}
+ .info-modal{bottom:58px;padding:14px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="space" aria-label="Interactive 3D black-hole visualization"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="hint-banner">DRAG TO ORBIT · SCROLL TO ZOOM · SELECT LABELS FOR SCIENCE NOTES</div>
+<div id="labels-overlay">
+  <button class="sci-label" data-target="horizon" style="top:51%;left:51%">[ EVENT HORIZON ]</button>
+  <button class="sci-label" data-target="photon" style="top:39%;left:41%">[ PHOTON RING ]</button>
+  <button class="sci-label" data-target="disk" style="top:60%;left:70%">[ ACCRETION DISK ]</button>
+  <button class="sci-label" data-target="jets" style="top:21%;left:51%">[ RELATIVISTIC JET ]</button>
+</div>
+<div class="info-modal" id="info-modal" role="dialog" aria-modal="false" aria-labelledby="info-title-text">
+  <button class="info-close" id="info-close" aria-label="Close information">✕</button>
+  <div class="info-title" id="info-title-text">EVENT HORIZON</div>
+  <p class="info-desc" id="info-desc-text"></p>
+</div>
+<div class="hud-telemetry">
+  <div class="hud-card">
+    <div class="hud-card-title">SPACETIME / MODEL TELEMETRY</div>
+    <div class="hud-graph"><svg viewBox="0 0 200 45" preserveAspectRatio="none"><path d="M0,22.5 Q50,5 100,22.5 T200,22.5" fill="none" stroke="#ffb48f" stroke-width="1.8"/><path d="M0,22.5 Q50,40 100,22.5 T200,22.5" fill="none" stroke="rgba(212,178,255,.4)" stroke-width="1" stroke-dasharray="3,3"/></svg></div>
+    <div class="note" id="telemetry-note">Rendering a stylized, interactive spacetime visualization.</div>
+  </div>
+</div>
+<header class="topbar">
+  <div class="brand">
+    <div class="eyebrow"><span class="brand-mark"></span> VELOX · OBSERVATORY LAB</div>
+    <h1>QUANTUM<br>SINGULARITY</h1>
+    <div class="subtitle">MISSION & EXPERIMENT EDITION · <strong>INTERACTIVE 3D</strong></div>
+    <a class="back-link" href="./index.html">↖ BACK TO SHORTY.MEMORY</a>
+  </div>
+  <div class="status" id="status"><span class="dot"></span><span id="status-text">OBSERVATORY ONLINE</span></div>
+</header>
+<aside class="panel open" id="panel" aria-label="Mission controls">
+  <div class="panel-head"><div><div class="panel-kicker">LAB / 07</div><h2>MISSION CONTROLS</h2></div><button id="hide-panel">HIDE</button></div>
+  <div class="section-title">PRESET UNIVERSE</div>
+  <div class="control"><select id="preset-universe" aria-label="Universe preset">
+    <option value="default">KERR SPINNING BLACK HOLE</option>
+    <option value="stellar">STELLAR-MASS BLACK HOLE</option>
+    <option value="supermassive">SUPERMASSIVE GARGANTUA</option>
+    <option value="bright">HIGH-LUMINOSITY ACCRETION</option>
+    <option value="cyber">CYBERNETIC MATRIX GRID</option>
+  </select></div>
+  <div class="section">
+    <div class="section-title">SPACETIME & KERR SPIN</div>
+    <div class="control"><div class="control-head"><label for="spin">Spin parameter (a*)</label><output class="value" id="spin-value">0.80</output></div><input id="spin" type="range" min="0" max="0.99" step="0.01" value="0.80"></div>
+    <div class="control"><div class="control-head"><label for="rs">Mass scale (visual)</label><output class="value" id="rs-value">1.00×</output></div><input id="rs" type="range" min="0.7" max="1.4" step="0.01" value="1"></div>
+    <div class="control"><div class="control-head"><label for="bending">Lensing intensity</label><output class="value" id="bending-value">1.35×</output></div><input id="bending" type="range" min="0" max="2.5" step="0.01" value="1.35"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">ACCRETION DISK & ENVIRONMENT</div>
+    <div class="control"><div class="control-head"><label for="disk-brightness">Disk luminosity</label><output class="value" id="disk-brightness-value">1.60×</output></div><input id="disk-brightness" type="range" min="0.2" max="4" step="0.01" value="1.6"></div>
+    <div class="control"><div class="control-head"><label for="turbulence">Plasma turbulence</label><output class="value" id="turbulence-value">1.50×</output></div><input id="turbulence" type="range" min="0" max="4.5" step="0.05" value="1.5"></div>
+    <div class="control"><div class="control-head"><label for="env-mode">Environment mode</label></div><select id="env-mode"><option value="0">DEEP SPACE NEBULA</option><option value="1">SOLAR CORONA NURSERY</option><option value="2">CYBERNETIC MATRIX GRID</option></select></div>
+  </div>
+  <div class="section">
+    <div class="section-title">MISSION & EXPERIMENTS</div>
+    <div class="grid"><button id="run-probe">LAUNCH PROBE</button><button id="export-json">EXPORT JSON</button></div>
+  </div>
+  <div class="section">
+    <div class="section-title">SCENE COMPONENTS</div>
+    <div class="checks">
+      <label class="check"><input id="show-disk" type="checkbox" checked> Accretion disk</label>
+      <label class="check"><input id="show-stars" type="checkbox" checked> Star field</label>
+      <label class="check"><input id="show-jets" type="checkbox" checked> Relativistic jets</label>
+      <label class="check"><input id="show-tde" type="checkbox" checked> Tidal comet TDE</label>
+      <label class="check" style="grid-column:span 2"><input id="toggle-labels" type="checkbox" checked> Scientific hotspot labels</label>
+    </div>
+  </div>
+  <div class="section">
+    <div class="grid"><button id="quantum-pulse">QUANTUM PULSE</button><button id="reset-params">RESET PARAMS</button></div>
+    <div class="grid" style="margin-top:7px"><button id="capture" style="grid-column:span 2">SAVE PNG SNAPSHOT</button></div>
+    <p class="note">Scientific note: visuals are a stylized educational model, not a numerical-relativity simulation or measured astronomical data.</p>
+  </div>
+</aside>
+<section class="bottom">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">SPIN (a*)</div><div class="metric-value" id="metric-spin">0.80</div></div>
+    <div class="metric"><div class="metric-label">ISCO / rᵍ</div><div class="metric-value" id="metric-isco">2.91</div></div>
+    <div class="metric"><div class="metric-label">RELATIVE CLOCK</div><div class="metric-value" id="metric-dilation">1.08×</div></div>
+  </div>
+  <div class="toolbar"><button id="pause">PAUSE</button><button id="orbit">AUTO ORBIT: OFF</button><button id="toggle-panel">CONTROLS</button><button id="reset-camera">RESET VIEW</button></div>
+</section>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const $ = id => document.getElementById(id);
+const isCoarse = matchMedia('(pointer: coarse)').matches;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas = $('space');
+const statusText = $('status-text');
+let renderer, scene, camera, controls, root, disk, diskMaterial, photonRing, halo, stars, jetTop, jetBottom, comet, cometTrail, probe;
+let paused = reduceMotion, autoOrbit = false, elapsed = 0, last = 0, pulseAt = -10, probeAt = -10;
+const params = {spin:.8,rs:1,bending:1.35,brightness:1.6,turbulence:1.5,env:0};
+const defaults = {...params};
+const clamp = (v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const infoData = {
+  horizon:{title:'EVENT HORIZON · ขอบฟ้าเหตุการณ์',desc:'ขอบเขตของกาลอวกาศที่ภายในนั้นไม่มีสัญญาณหรือแสงใดสามารถเดินทางกลับออกไปยังผู้สังเกตที่อยู่ไกลได้ รูปร่างทรงกลมในฉากนี้เป็นภาพประกอบ ไม่ใช่ภาพถ่ายจริง'},
+  photon:{title:'PHOTON RING · วงแหวนโฟตอน',desc:'แสงบางเส้นทางอาจโค้งอย่างรุนแรงและวนรอบหลุมดำได้ วงแหวนในภาพเป็นองค์ประกอบเชิงภาพเพื่อแสดงแนวคิด ไม่ใช่การคำนวณเส้นทางแสงแบบสัมพัทธภาพทั่วไปเต็มรูปแบบ'},
+  disk:{title:'ACCRETION DISK · จานสะสมมวล',desc:'ก๊าซและพลาสมาที่สูญเสียพลังงานจากการเสียดทานและกระบวนการแม่เหล็กไหลวนรอบหลุมดำ จึงร้อนและปล่อยรังสีออกมา สีในฉากนี้เป็นการจำลองเชิงศิลป์'},
+  jets:{title:'RELATIVISTIC JETS · ลำอนุภาคสัมพัทธภาพ',desc:'หลุมดำบางระบบมีลำพลาสมาพลังงานสูงพุ่งออกใกล้แนวแกนหมุน โดยเกี่ยวข้องกับสนามแม่เหล็กและสภาพแวดล้อมรอบหลุมดำ ไม่ใช่ทุกหลุมดำที่จะมีเจ็ตที่สังเกตเห็นได้'}
+};
+function iscoRadius(a){
+  const z1=1+Math.cbrt(1-a*a)*(Math.cbrt(1+a)+Math.cbrt(1-a));
+  const z2=Math.sqrt(3*a*a+z1*z1);
+  return 3+z2-Math.sqrt(Math.max(0,(3-z1)*(3+z1+2*z2)));
+}
+function makeDiskMaterial(){
+  return new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
+    uniforms:{uTime:{value:0},uBrightness:{value:1.6},uTurbulence:{value:1.5},uEnv:{value:0},uSpin:{value:.8}},
+    vertexShader:[
+      'varying vec3 vPos;',
+      'void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}'
+    ].join('\\n'),
+    fragmentShader:[
+      'varying vec3 vPos;',
+      'uniform float uTime;uniform float uBrightness;uniform float uTurbulence;uniform float uEnv;uniform float uSpin;',
+      'void main(){',
+      ' float r=length(vPos.xy);float a=atan(vPos.y,vPos.x);',
+      ' float wave=sin(a*22.0-uTime*(.5+uTurbulence*.65)+r*6.0+sin(a*7.0+uTime*.6)*.8);',
+      ' float filament=pow(max(0.0,.5+.5*wave),5.0);',
+      ' float swirl=sin(a*39.0+r*13.0-uTime*uTurbulence*1.3)*.5+.5;',
+      ' float inner=smoothstep(1.18,1.52,r);float outer=1.0-smoothstep(3.35,4.7,r);',
+      ' float alpha=inner*outer*(.24+.32*filament+.16*swirl)*uBrightness*.48;',
+      ' vec3 violet=vec3(.36,.08,.9);vec3 pink=vec3(1.0,.22,.56);vec3 gold=vec3(1.0,.62,.25);vec3 cyan=vec3(.0,.93,.82);',
+      ' vec3 col=mix(violet,pink,clamp(.25+.35*wave+.25*uSpin,0.0,1.0));',
+      ' col=mix(col,gold,smoothstep(2.0,4.7,r)*.7);',
+      ' if(uEnv>.5&&uEnv<1.5) col=mix(col,gold,.75);',
+      ' if(uEnv>1.5) col=mix(col,cyan,.92);',
+      ' col*=.75+filament*.9+swirl*.2;',
+      ' gl_FragColor=vec4(col,alpha);',
+      '}'
+    ].join('\\n')
+  });
+}
+function createStars(){
+  const count=isCoarse?750:1500, pos=[],colors=[],sizes=[];
+  for(let i=0;i<count;i++){
+    const radius=18+Math.random()*30,theta=Math.random()*Math.PI*2,phi=Math.acos(2*Math.random()-1);
+    pos.push(radius*Math.sin(phi)*Math.cos(theta),radius*Math.cos(phi),radius*Math.sin(phi)*Math.sin(theta));
+    const t=Math.random();colors.push(t>.84?1:.52,t>.84?.78:.64,t>.84?.58:1);sizes.push(.5+Math.random()*1.5);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+  geo.setAttribute('size',new THREE.Float32BufferAttribute(sizes,1));
+  return new THREE.Points(geo,new THREE.PointsMaterial({size:isCoarse?.055:.065,vertexColors:true,transparent:true,opacity:.72,depthWrite:false,sizeAttenuation:true}));
+}
+function makeTrail(){
+  const pts=[];
+  for(let i=0;i<=180;i++){const a=i/180*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*4.2,.025,Math.sin(a)*4.2));}
+  const geo=new THREE.BufferGeometry().setFromPoints(pts);
+  return new THREE.LineLoop(geo,new THREE.LineBasicMaterial({color:0xffb48f,transparent:true,opacity:.24}));
+}
+function init(){
+  renderer=new THREE.WebGLRenderer({canvas,antialias:!isCoarse,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,isCoarse?1.2:1.6));
+  renderer.setSize(innerWidth,innerHeight,false);
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.15;
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x020106);
+  camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.1,250);
+  camera.position.set(0,2.35,12.3);
+  controls=new OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;controls.dampingFactor=.055;controls.enablePan=false;controls.minDistance=4.2;controls.maxDistance=29;controls.target.set(0,0,0);controls.autoRotate=false;controls.autoRotateSpeed=.45;controls.update();
+  root=new THREE.Group();scene.add(root);
+  stars=createStars();scene.add(stars);
+  diskMaterial=makeDiskMaterial();
+  disk=new THREE.Mesh(new THREE.RingGeometry(1.2,4.65,240,8),diskMaterial);disk.rotation.x=1.1;disk.rotation.z=-.22;root.add(disk);
+  const hole=new THREE.Mesh(new THREE.SphereGeometry(1.1,72,56),new THREE.MeshBasicMaterial({color:0x010107}));root.add(hole);
+  const coreGlow=new THREE.Mesh(new THREE.SphereGeometry(1.16,48,32),new THREE.MeshBasicMaterial({color:0x180f28,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false}));root.add(coreGlow);
+  photonRing=new THREE.Mesh(new THREE.TorusGeometry(1.22,.035,12,180),new THREE.MeshBasicMaterial({color:0xffbf9c,transparent:true,opacity:.84,blending:THREE.AdditiveBlending,depthWrite:false}));photonRing.rotation.x=1.1;photonRing.rotation.z=-.22;root.add(photonRing);
+  halo=new THREE.Mesh(new THREE.TorusGeometry(4.9,.018,8,220),new THREE.MeshBasicMaterial({color:0x8b72ff,transparent:true,opacity:.34,blending:THREE.AdditiveBlending,depthWrite:false}));halo.rotation.x=1.1;halo.rotation.z=-.22;root.add(halo);
+  const jetMat=new THREE.MeshBasicMaterial({color:0x7deeff,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false});
+  jetTop=new THREE.Mesh(new THREE.CylinderGeometry(.025,.42,4.4,24,1,true),jetMat);jetTop.position.y=3.2;root.add(jetTop);
+  jetBottom=new THREE.Mesh(new THREE.CylinderGeometry(.42,.025,4.4,24,1,true),jetMat.clone());jetBottom.position.y=-3.2;root.add(jetBottom);
+  cometTrail=makeTrail();root.add(cometTrail);
+  comet=new THREE.Mesh(new THREE.SphereGeometry(.09,18,14),new THREE.MeshBasicMaterial({color:0xffb48f,transparent:true,opacity:1,blending:THREE.AdditiveBlending}));root.add(comet);
+  window.addEventListener('resize',onResize,{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){last=0;if(!paused)requestAnimationFrame(animate);}});
+  syncParams();animate(performance.now());
+}
+function onResize(){
+  if(!renderer)return;
+  camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<700?48:40;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight,false);
+}
+function syncParams(){
+  params.spin=Number($('spin').value);params.rs=Number($('rs').value);params.bending=Number($('bending').value);
+  params.brightness=Number($('disk-brightness').value);params.turbulence=Number($('turbulence').value);params.env=Number($('env-mode').value);
+  $('spin-value').textContent=params.spin.toFixed(2);$('rs-value').textContent=params.rs.toFixed(2)+'×';$('bending-value').textContent=params.bending.toFixed(2)+'×';
+  $('disk-brightness-value').textContent=params.brightness.toFixed(2)+'×';$('turbulence-value').textContent=params.turbulence.toFixed(2)+'×';
+  $('metric-spin').textContent=params.spin.toFixed(2);$('metric-isco').textContent=iscoRadius(params.spin).toFixed(2);
+  const horizon=1+Math.sqrt(Math.max(0,1-params.spin*params.spin));
+  const dist=Math.max(camera.position.length(),horizon+.05);
+  $('metric-dilation').textContent=(1/Math.sqrt(Math.max(.05,1-horizon/dist))).toFixed(2)+'×';
+  diskMaterial.uniforms.uBrightness.value=params.brightness;
+  diskMaterial.uniforms.uTurbulence.value=params.turbulence;
+  diskMaterial.uniforms.uEnv.value=params.env;
+  diskMaterial.uniforms.uSpin.value=params.spin;
+  const mass=params.rs;
+  root.scale.setScalar(mass);
+  photonRing.scale.setScalar(1+params.bending*.035);
+  photonRing.material.opacity=.35+params.bending*.19;
+  halo.material.opacity=.06+params.bending*.16;
+  stars.material.opacity=params.env===2?.16:.65;
+  if(params.env===2)scene.background=new THREE.Color(0x010b14);
+  else if(params.env===1)scene.background=new THREE.Color(0x100702);
+  else scene.background=new THREE.Color(0x020106);
+  disk.visible=$('show-disk').checked;
+  stars.visible=$('show-stars').checked;
+  jetTop.visible=jetBottom.visible=$('show-jets').checked;
+  comet.visible=cometTrail.visible=$('show-tde').checked;
+  $('telemetry-note').textContent='ISCO: '+iscoRadius(params.spin).toFixed(2)+' r_g · Visual mass scale: '+mass.toFixed(2)+'×';
+}
+function setStatus(text){statusText.textContent=text;}
+function animate(now){
+  if(document.hidden)return;
+  requestAnimationFrame(animate);
+  const dt=last?Math.min((now-last)/1000,.05):.016;last=now;
+  if(!paused)elapsed+=dt;
+  if(!paused){
+    diskMaterial.uniforms.uTime.value=elapsed;
+    root.rotation.y+=dt*(.025+params.spin*.075);
+    root.rotation.x=.012*Math.sin(elapsed*.22);
+    stars.rotation.y+=dt*.0015;
+    jetTop.material.opacity=.22+.07*Math.sin(elapsed*1.2);
+    jetBottom.material.opacity=.20+.06*Math.sin(elapsed*1.05+1.2);
+    const a=elapsed*(.55+params.spin*.5);
+    comet.position.set(Math.cos(a)*4.2,.12*Math.sin(a*1.8),Math.sin(a)*4.2);
+    if(pulseAt>=0){
+      const age=elapsed-pulseAt;
+      const s=1+Math.max(0,Math.sin(age*7))*Math.max(0,1-age/1.5)*.62;
+      photonRing.scale.setScalar((1+params.bending*.035)*s);
+      if(age>1.5)pulseAt=-10;
+    }
+    if(probe&&probeAt>=0){
+      const age=elapsed-probeAt,ang=age*2.0,r=3.7-age*.25;
+      probe.position.set(Math.cos(ang)*r,Math.sin(age*3)*.35,Math.sin(ang)*r);
+      probe.material.opacity=Math.max(0,1-age/12);
+      if(age>12){root.remove(probe);probe.geometry.dispose();probe.material.dispose();probe=null;probeAt=-10;setStatus('PROBE TELEMETRY SAVED');}
+    }
+  }
+  controls.autoRotate=autoOrbit&&!paused;
+  controls.update();
+  if(halo)halo.rotation.z=-.22+elapsed*.006;
+  renderer.render(scene,camera);
+}
+const presets={
+  default:{spin:.8,rs:1,bending:1.35,brightness:1.6,turbulence:1.5,env:0},
+  stellar:{spin:.1,rs:.8,bending:1,brightness:2.2,turbulence:2,env:1},
+  supermassive:{spin:.95,rs:1.3,bending:1.8,brightness:1.2,turbulence:.8,env:0},
+  bright:{spin:.5,rs:1,bending:1.5,brightness:3.5,turbulence:2.5,env:1},
+  cyber:{spin:.9,rs:1.1,bending:1.4,brightness:2,turbulence:1.8,env:2}
+};
+['spin','rs','bending','disk-brightness','turbulence','env-mode','show-disk','show-stars','show-jets','show-tde'].forEach(id=>{
+  const el=$(id);el.addEventListener('input',syncParams);el.addEventListener('change',syncParams);
+});
+$('preset-universe').addEventListener('change',e=>{
+  const p=presets[e.target.value];if(!p)return;
+  $('spin').value=p.spin;$('rs').value=p.rs;$('bending').value=p.bending;$('disk-brightness').value=p.brightness;$('turbulence').value=p.turbulence;$('env-mode').value=p.env;syncParams();
+});
+$('run-probe').addEventListener('click',()=>{
+  if(probe){root.remove(probe);probe.geometry.dispose();probe.material.dispose();}
+  probe=new THREE.Mesh(new THREE.SphereGeometry(.105,18,14),new THREE.MeshBasicMaterial({color:0x88e8cb,transparent:true,opacity:1,blending:THREE.AdditiveBlending}));
+  root.add(probe);probeAt=elapsed;setStatus('PROBE DEPLOYED · TRACKING');
+});
+$('export-json').addEventListener('click',()=>{
+  const config={name:'VELOX Quantum Singularity Preset',spin:params.spin,massScale:params.rs,lensingIntensity:params.bending,diskLuminosity:params.brightness,plasmaTurbulence:params.turbulence,environment:params.env,components:{disk:$('show-disk').checked,stars:$('show-stars').checked,jets:$('show-jets').checked,tidalComet:$('show-tde').checked,labels:$('toggle-labels').checked},note:'Stylized visualization parameters; not measured astronomical data.'};
+  const blob=new Blob([JSON.stringify(config,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='velox-singularity-mission-config.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$('quantum-pulse').addEventListener('click',()=>{pulseAt=elapsed;setStatus('QUANTUM PULSE INITIATED');});
+$('reset-params').addEventListener('click',()=>{
+  $('spin').value=defaults.spin;$('rs').value=defaults.rs;$('bending').value=defaults.bending;$('disk-brightness').value=defaults.brightness;$('turbulence').value=defaults.turbulence;$('env-mode').value=defaults.env;$('preset-universe').value='default';
+  ['show-disk','show-stars','show-jets','show-tde','toggle-labels'].forEach(id=>$(id).checked=true);$('labels-overlay').style.display='block';syncParams();setStatus('PARAMETERS RESET');
+});
+$('capture').addEventListener('click',()=>{
+  renderer.render(scene,camera);
+  try{const a=document.createElement('a');a.download='velox-quantum-singularity.png';a.href=renderer.domElement.toDataURL('image/png');a.click();setStatus('PNG SNAPSHOT SAVED');}
+  catch(e){setStatus('SNAPSHOT UNAVAILABLE');console.error(e);}
+});
+$('toggle-labels').addEventListener('change',()=>{$('labels-overlay').style.display=$('toggle-labels').checked?'block':'none';});
+$('info-close').addEventListener('click',()=>$('info-modal').classList.remove('active'));
+document.querySelectorAll('.sci-label').forEach(label=>label.addEventListener('click',()=>{
+  const data=infoData[label.dataset.target];if(!data)return;
+  $('info-title-text').textContent=data.title;$('info-desc-text').textContent=data.desc;$('info-modal').classList.add('active');
+}));
+$('pause').addEventListener('click',()=>{
+  paused=!paused;$('pause').textContent=paused?'RESUME':'PAUSE';$('pause').classList.toggle('active',paused);
+  setStatus(paused?'SIMULATION PAUSED':'OBSERVATORY ONLINE');
+  if(paused){controls.autoRotate=false;}
+});
+$('orbit').addEventListener('click',()=>{
+  autoOrbit=!autoOrbit;$('orbit').textContent='AUTO ORBIT: '+(autoOrbit?'ON':'OFF');$('orbit').classList.toggle('active',autoOrbit);
+});
+function hidePanel(hide){
+  const panel=$('panel');
+  if(hide){panel.classList.add('closed');panel.classList.remove('open');}
+  else{panel.classList.remove('closed');panel.classList.add('open');}
+}
+$('hide-panel').addEventListener('click',()=>hidePanel(true));
+$('toggle-panel').addEventListener('click',()=>hidePanel(!$('panel').classList.contains('closed')));
+$('reset-camera').addEventListener('click',()=>{
+  camera.position.set(0,2.35,12.3);controls.target.set(0,0,0);controls.update();setStatus('VIEW RESET');
+});
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape')$('info-modal').classList.remove('active');
+  if(e.key.toLowerCase()==='p'&&!e.repeat)$('pause').click();
+});
+try{init();}catch(error){
+  console.error('Observatory initialization failed:',error);
+  setStatus('3D UNAVAILABLE · CHECK WEBGL');
+  $('telemetry-note').textContent='3D rendering could not start in this browser. Try a current browser with WebGL enabled.';
+  const warning=document.createElement('div');warning.style.cssText='position:fixed;left:50%;top:50%;z-index:20;transform:translate(-50%,-50%);max-width:420px;padding:18px;background:#100d20;border:1px solid #806a9d;color:#f5f2ff;font:12px/1.7 system-ui';warning.textContent='3D rendering could not start. Please check WebGL support or try a current Chrome / Edge browser.';document.body.appendChild(warning);
+}
+</script>
+</body>
+</html>
