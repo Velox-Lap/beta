@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#020106">
+<meta name="description" content="VELOX Quantum Singularity Observatory — interactive 3D black-hole mission lab.">
+<title>VELOX — Quantum Singularity Observatory</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+:root{color-scheme:dark;--bg:#020106;--panel:rgba(8,9,22,.96);--line:rgba(190,175,245,.28);--hot:#ffb48f;--violet:#d4b2ff;--muted:#9292af;--mint:#88e8cb}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:#f5f2ff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+body{isolation:isolate}
+button,select,input{font:inherit}
+#space{position:fixed;inset:0;display:block;width:100%;height:100%;outline:none;touch-action:none;cursor:grab;z-index:0}
+#space:active{cursor:grabbing}
+.vignette{position:fixed;z-index:1;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 14%,rgba(1,2,8,.28) 50%,rgba(1,2,8,.88) 100%),linear-gradient(180deg,rgba(2,2,8,.38),transparent 16%,transparent 84%,rgba(2,2,8,.58))}
+.topbar{position:fixed;z-index:4;top:max(18px,env(safe-area-inset-top));left:clamp(16px,3.2vw,42px);right:clamp(16px,3.2vw,42px);display:flex;justify-content:space-between;align-items:flex-start;gap:15px;pointer-events:none}
+.brand{text-shadow:0 2px 30px #000;pointer-events:auto}
+.eyebrow{display:flex;align-items:center;gap:9px;margin-bottom:11px;color:#d4b2ff;font-size:9px;font-weight:600;letter-spacing:.25em}
+.brand-mark{width:18px;height:18px;position:relative;border:1px solid rgba(255,180,143,.85);border-radius:50%;display:inline-block;flex:0 0 auto}
+.brand-mark:before{content:"";position:absolute;left:-4px;right:-4px;top:8px;height:1px;transform:rotate(-38deg);background:#ffb48f;box-shadow:0 0 12px #ffb48f}
+h1{margin:0;font-size:clamp(25px,4vw,50px);line-height:.94;font-weight:250;letter-spacing:clamp(3px,.8vw,9px)}
+.subtitle{margin-top:11px;color:#9a9ab8;font-size:8px;letter-spacing:.17em}
+.subtitle strong{color:#e2cfff;font-weight:500}
+.status{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;background:rgba(7,8,22,.85);padding:9px 13px;color:#d0cce6;font-size:8px;letter-spacing:.12em;backdrop-filter:blur(16px);white-space:nowrap;pointer-events:auto}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px rgba(136,232,203,.7)}
+.back-link{display:inline-flex;align-items:center;gap:7px;color:#d0cce6;text-decoration:none;border:1px solid var(--line);padding:8px 11px;margin-top:13px;background:rgba(7,8,22,.75);font-size:8px;letter-spacing:.09em}
+.back-link:hover{border-color:var(--hot);color:white}
+.panel{position:fixed;z-index:5;top:145px;right:clamp(14px,3.2vw,42px);width:330px;max-height:calc(100dvh - 215px);overflow:auto;padding:17px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 25px 80px rgba(0,0,0,.6);backdrop-filter:blur(24px);scrollbar-width:thin;scrollbar-color:rgba(180,166,230,.3) transparent}
+.panel.closed{display:none!important}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.panel-kicker{color:#e0ab8f;font-size:8px;letter-spacing:.2em}
+.panel h2{margin:4px 0 0;font-size:12px;font-weight:600;letter-spacing:.15em}
+.section{border-top:1px solid rgba(190,175,245,.15);padding-top:12px;margin-top:12px}
+.section-title{margin-bottom:9px;color:#8888a8;font-size:8px;font-weight:700;letter-spacing:.18em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+button,select{min-height:34px;border:1px solid var(--line);border-radius:6px;padding:0 9px;background:rgba(22,18,42,.85);color:#eae5fc;font-size:8px;letter-spacing:.07em;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s}
+button:hover,button.active{border-color:rgba(255,180,145,.8);background:rgba(105,62,110,.6);box-shadow:0 0 12px rgba(212,178,255,.2)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-offset:3px}
+select{width:100%;min-height:38px}
+.control{margin-top:12px}
+.control-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;color:#d0cee4;font-size:9px}
+.value{color:var(--hot);font-variant-numeric:tabular-nums}
+input[type=range]{display:block;width:100%;height:3px;appearance:none;border-radius:9px;background:linear-gradient(90deg,#b892e8,#ffb48f);cursor:pointer}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border:2px solid #141026;border-radius:50%;background:#ffb48f;box-shadow:0 0 8px rgba(255,180,143,.6)}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;border:2px solid #141026;border-radius:50%;background:#ffb48f}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.check{display:flex;align-items:center;gap:7px;color:#c4c2dc;font-size:9px;cursor:pointer}
+.check input{width:13px;height:13px;accent-color:#d4b2ff}
+.note{margin:11px 0 0;color:#777994;font-size:8px;line-height:1.6}
+#labels-overlay{position:fixed;inset:0;z-index:2;pointer-events:none}
+.sci-label{position:absolute;transform:translate(-50%,-50%);background:rgba(7,8,22,.82);border:1px solid rgba(190,175,245,.4);padding:5px 8px;border-radius:4px;font-size:7px;letter-spacing:.12em;color:#d4b2ff;backdrop-filter:blur(8px);pointer-events:auto;cursor:pointer;white-space:nowrap;transition:transform .2s,background .2s}
+.sci-label:hover{background:rgba(105,62,110,.8);border-color:var(--hot);color:#fff;transform:translate(-50%,-50%) scale(1.04)}
+.info-modal{position:fixed;z-index:10;bottom:92px;left:50%;transform:translateX(-50%) translateY(15px);width:min(470px,calc(100vw - 30px));background:rgba(10,11,28,.96);border:1px solid var(--line);border-radius:10px;padding:17px 20px;box-shadow:0 20px 50px #000b;opacity:0;pointer-events:none;transition:all .25s}
+.info-modal.active{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.info-title{color:var(--hot);font-size:10px;font-weight:700;letter-spacing:.14em;margin-bottom:7px;padding-right:20px}
+.info-desc{color:#d0cce6;font-size:10px;line-height:1.7;margin:0}
+.info-close{position:absolute;top:7px;right:8px;background:none;border:0;color:#9a9ab8;min-height:26px}
+.hud-telemetry{position:fixed;z-index:3;bottom:90px;left:clamp(16px,3.2vw,42px);display:flex;gap:10px;pointer-events:none}
+.hud-card{background:rgba(7,8,22,.88);border:1px solid var(--line);border-radius:8px;padding:11px 13px;backdrop-filter:blur(14px);pointer-events:auto;width:218px}
+.hud-card-title{font-size:7px;color:var(--hot);letter-spacing:.15em;margin-bottom:8px;font-weight:700}
+.hud-graph{width:100%;height:43px;background:#0006;border:1px solid rgba(190,175,245,.15);border-radius:3px;overflow:hidden}
+.hud-graph svg{width:100%;height:100%}
+.bottom{position:fixed;z-index:4;left:clamp(16px,3.2vw,42px);right:clamp(16px,3.2vw,42px);bottom:max(15px,env(safe-area-inset-bottom));display:flex;align-items:flex-end;justify-content:space-between;gap:14px;pointer-events:none}
+.metrics{display:flex;pointer-events:auto;background:rgba(7,8,22,.8);padding:8px 11px;border:1px solid var(--line);border-radius:8px;backdrop-filter:blur(12px)}
+.metric{min-width:74px;padding:0 9px;border-left:1px solid var(--line)}
+.metric:first-child{padding-left:0;border-left:0}
+.metric-label{color:#787a9d;font-size:7px;letter-spacing:.1em;margin-bottom:4px}
+.metric-value{color:#f0ecff;font-size:14px;font-weight:300;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;pointer-events:auto}
+.toolbar button{min-height:37px}
+.hint-banner{position:fixed;z-index:3;top:95px;left:50%;transform:translateX(-50%);background:rgba(15,12,32,.84);border:1px solid var(--line);padding:7px 13px;border-radius:20px;font-size:7px;letter-spacing:.13em;color:#d0cce6;backdrop-filter:blur(10px);pointer-events:none}
+@media(max-width:900px){
+ .hud-telemetry,.metrics,.hint-banner{display:none}
+ .panel{top:145px;right:10px;width:min(290px,calc(100vw - 20px));max-height:calc(100dvh - 220px);display:none}
+ .panel.open{display:block}
+ .panel.closed{display:none!important}
+ .topbar{top:max(12px,env(safe-area-inset-top));left:12px;right:12px}
+ .brand h1{font-size:clamp(22px,6vw,34px);letter-spacing:3px}
+ .eyebrow{font-size:7px;margin-bottom:7px}
+ .subtitle{font-size:7px;letter-spacing:.08em}
+ .status{font-size:7px;padding:8px}
+ .back-link{margin-top:9px;font-size:7px;padding:7px}
+ .bottom{left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));align-items:flex-end}
+ .toolbar{gap:5px;max-width:100%}
+ .toolbar button{min-height:34px;padding:0 8px;font-size:7px}
+ .info-modal{bottom:70px}
+ .sci-label{font-size:6px;padding:4px 5px;letter-spacing:.04em}
+}
+@media(max-width:480px){
+ .status{max-width:122px;white-space:normal;line-height:1.35}
+ .panel{top:132px;max-height:calc(100dvh - 185px);padding:13px}
+ .bottom{display:block}
+ .toolbar{justify-content:center}
+ .toolbar button{flex:1}
+ .sci-label[data-target=jets]{top:25%}
+ .sci-label[data-target=photon]{top:42%;left:28%}
+ .sci-label[data-target=disk]{top:63%;left:77%}
+ .sci-label[data-target=horizon]{top:51%;left:52%}
+ .info-modal{bottom:58px;padding:14px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="space" aria-label="Interactive 3D black-hole visualization"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="hint-banner">DRAG TO ORBIT · SCROLL TO ZOOM · SELECT LABELS FOR SCIENCE NOTES</div>
+<div id="labels-overlay">
+  <button class="sci-label" data-target="horizon" style="top:51%;left:51%">[ EVENT HORIZON ]</button>
+  <button class="sci-label" data-target="photon" style="top:39%;left:41%">[ PHOTON RING ]</button>
+  <button class="sci-label" data-target="disk" style="top:60%;left:70%">[ ACCRETION DISK ]</button>
+  <button class="sci-label" data-target="jets" style="top:21%;left:51%">[ RELATIVISTIC JET ]</button>
+</div>
+<div class="info-modal" id="info-modal" role="dialog" aria-modal="false" aria-labelledby="info-title-text">
+  <button class="info-close" id="info-close" aria-label="Close information">✕</button>
+  <div class="info-title" id="info-title-text">EVENT HORIZON</div>
+  <p class="info-desc" id="info-desc-text"></p>
+</div>
+<div class="hud-telemetry">
+  <div class="hud-card">
+    <div class="hud-card-title">SPACETIME / MODEL TELEMETRY</div>
+    <div class="hud-graph"><svg viewBox="0 0 200 45" preserveAspectRatio="none"><path d="M0,22.5 Q50,5 100,22.5 T200,22.5" fill="none" stroke="#ffb48f" stroke-width="1.8"/><path d="M0,22.5 Q50,40 100,22.5 T200,22.5" fill="none" stroke="rgba(212,178,255,.4)" stroke-width="1" stroke-dasharray="3,3"/></svg></div>
+    <div class="note" id="telemetry-note">Rendering a stylized, interactive spacetime visualization.</div>
+  </div>
+</div>
+<header class="topbar">
+  <div class="brand">
+    <div class="eyebrow"><span class="brand-mark"></span> VELOX · OBSERVATORY LAB</div>
+    <h1>QUANTUM<br>SINGULARITY</h1>
+    <div class="subtitle">MISSION & EXPERIMENT EDITION · <strong>INTERACTIVE 3D</strong></div>
+    <a class="back-link" href="./index.html">↖ BACK TO SHORTY.MEMORY</a>
+  </div>
+  <div class="status" id="status"><span class="dot"></span><span id="status-text">OBSERVATORY ONLINE</span></div>
+</header>
+<aside class="panel open" id="panel" aria-label="Mission controls">
+  <div class="panel-head"><div><div class="panel-kicker">LAB / 07</div><h2>MISSION CONTROLS</h2></div><button id="hide-panel">HIDE</button></div>
+  <div class="section-title">PRESET UNIVERSE</div>
+  <div class="control"><select id="preset-universe" aria-label="Universe preset">
+    <option value="default">KERR SPINNING BLACK HOLE</option>
+    <option value="stellar">STELLAR-MASS BLACK HOLE</option>
+    <option value="supermassive">SUPERMASSIVE GARGANTUA</option>
+    <option value="bright">HIGH-LUMINOSITY ACCRETION</option>
+    <option value="cyber">CYBERNETIC MATRIX GRID</option>
+  </select></div>
+  <div class="section">
+    <div class="section-title">SPACETIME & KERR SPIN</div>
+    <div class="control"><div class="control-head"><label for="spin">Spin parameter (a*)</label><output class="value" id="spin-value">0.80</output></div><input id="spin" type="range" min="0" max="0.99" step="0.01" value="0.80"></div>
+    <div class="control"><div class="control-head"><label for="rs">Mass scale (visual)</label><output class="value" id="rs-value">1.00×</output></div><input id="rs" type="range" min="0.7" max="1.4" step="0.01" value="1"></div>
+    <div class="control"><div class="control-head"><label for="bending">Lensing intensity</label><output class="value" id="bending-value">1.35×</output></div><input id="bending" type="range" min="0" max="2.5" step="0.01" value="1.35"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">ACCRETION DISK & ENVIRONMENT</div>
+    <div class="control"><div class="control-head"><label for="disk-brightness">Disk luminosity</label><output class="value" id="disk-brightness-value">1.60×</output></div><input id="disk-brightness" type="range" min="0.2" max="4" step="0.01" value="1.6"></div>
+    <div class="control"><div class="control-head"><label for="turbulence">Plasma turbulence</label><output class="value" id="turbulence-value">1.50×</output></div><input id="turbulence" type="range" min="0" max="4.5" step="0.05" value="1.5"></div>
+    <div class="control"><div class="control-head"><label for="env-mode">Environment mode</label></div><select id="env-mode"><option value="0">DEEP SPACE NEBULA</option><option value="1">SOLAR CORONA NURSERY</option><option value="2">CYBERNETIC MATRIX GRID</option></select></div>
+  </div>
+  <div class="section">
+    <div class="section-title">MISSION & EXPERIMENTS</div>
+    <div class="grid"><button id="run-probe">LAUNCH PROBE</button><button id="export-json">EXPORT JSON</button></div>
+  </div>
+  <div class="section">
+    <div class="section-title">SCENE COMPONENTS</div>
+    <div class="checks">
+      <label class="check"><input id="show-disk" type="checkbox" checked> Accretion disk</label>
+      <label class="check"><input id="show-stars" type="checkbox" checked> Star field</label>
+      <label class="check"><input id="show-jets" type="checkbox" checked> Relativistic jets</label>
+      <label class="check"><input id="show-tde" type="checkbox" checked> Tidal comet TDE</label>
+      <label class="check" style="grid-column:span 2"><input id="toggle-labels" type="checkbox" checked> Scientific hotspot labels</label>
+    </div>
+  </div>
+  <div class="section">
+    <div class="grid"><button id="quantum-pulse">QUANTUM PULSE</button><button id="reset-params">RESET PARAMS</button></div>
+    <div class="grid" style="margin-top:7px"><button id="capture" style="grid-column:span 2">SAVE PNG SNAPSHOT</button></div>
+    <p class="note">Scientific note: visuals are a stylized educational model, not a numerical-relativity simulation or measured astronomical data.</p>
+  </div>
+</aside>
+<section class="bottom">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">SPIN (a*)</div><div class="metric-value" id="metric-spin">0.80</div></div>
+    <div class="metric"><div class="metric-label">ISCO / rᵍ</div><div class="metric-value" id="metric-isco">2.91</div></div>
+    <div class="metric"><div class="metric-label">RELATIVE CLOCK</div><div class="metric-value" id="metric-dilation">1.08×</div></div>
+  </div>
+  <div class="toolbar"><button id="pause">PAUSE</button><button id="orbit">AUTO ORBIT: OFF</button><button id="toggle-panel">CONTROLS</button><button id="reset-camera">RESET VIEW</button></div>
+</section>
+<script type="module" src="./observatory.js?v=20261025-1"></script>
+</body>
+</html>
