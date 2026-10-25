@@ -75,3 +75,52 @@ button:active { transform: scale(.985); }
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Immersive universe layer — original Shorty OS direction */
+.boot-screen, .app-shell, .auth-dialog, .letter-dialog, .mascot-button, .mascot-bubble, .toast {
+  position: relative;
+  z-index: 2;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .55;
+  background:
+    radial-gradient(ellipse at 14% 78%, rgba(94,120,49,.075), transparent 38%),
+    radial-gradient(ellipse at 86% 12%, rgba(105,134,65,.07), transparent 34%);
+}
+.shorty-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 480ms var(--motion-ease), transform 480ms var(--motion-ease);
+  transition-delay: var(--shorty-delay, 0ms);
+}
+.shorty-reveal.shorty-revealed { opacity: 1; transform: translateY(0); }
+#viewRoot .memory-item, #viewRoot .stat-card, #viewRoot .movie-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+#viewRoot .memory-item::after, #viewRoot .stat-card::after, #viewRoot .movie-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgba(200,241,105,.09), transparent 58%);
+  transition: opacity 220ms ease;
+}
+#viewRoot .memory-item:hover::after, #viewRoot .stat-card:hover::after, #viewRoot .movie-card:hover::after { opacity: 1; }
+.shorty-visuals-muted .shorty-universe,
+.shorty-visuals-muted .shorty-cursor-glow { opacity: 0 !important; }
+.shorty-visuals-muted .scanlines::after { animation: none !important; }
+@media (hover: none) {
+  #viewRoot .memory-item, #viewRoot .stat-card, #viewRoot .movie-card { transform: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shorty-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
