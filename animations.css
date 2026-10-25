@@ -184,3 +184,100 @@ body::before {
   .orbit-core { animation:none !important; }
   .shorty-3d-orbit { transform:none !important; }
 }
+
+
+/* SHORTY ORBIT v2 — richer lighting, atmosphere and layered orbital motion */
+.shorty-3d-orbit {
+  width: clamp(190px, 25vw, 340px);
+  filter: drop-shadow(0 20px 34px rgba(0,0,0,.24));
+  isolation: isolate;
+}
+.shorty-3d-orbit::before {
+  content:""; position:absolute; inset:5%; border-radius:50%;
+  background:radial-gradient(circle, rgba(184,239,101,.15), rgba(122,171,64,.06) 42%, transparent 70%);
+  filter:blur(13px); transform:translateZ(-24px) scale(1.18);
+  animation:orbitHalo 6s ease-in-out infinite alternate;
+}
+.orbit-core {
+  inset:17%;
+  background:
+    radial-gradient(ellipse at 31% 23%, rgba(255,255,224,.98) 0, rgba(220,255,165,.76) 3%, rgba(166,207,99,.25) 13%, transparent 27%),
+    radial-gradient(ellipse at 67% 72%, rgba(5,13,6,.98) 0, rgba(15,29,11,.9) 26%, transparent 53%),
+    radial-gradient(ellipse at 40% 44%, transparent 0 17%, rgba(202,237,135,.16) 18% 19%, transparent 20% 28%, rgba(14,29,11,.2) 29% 31%, transparent 32%),
+    conic-gradient(from 35deg at 47% 50%, #192916, #718e43, #c6e88a, #3d582b, #172214, #8eae54, #192916);
+  box-shadow:
+    inset -23px -13px 28px rgba(0,0,0,.88),
+    inset 8px 4px 17px rgba(241,255,208,.48),
+    inset 0 0 0 1px rgba(226,255,179,.28),
+    0 0 0 1px rgba(205,255,139,.14),
+    0 0 26px rgba(176,220,104,.2);
+  animation:orbitFloat 7s ease-in-out infinite, orbitSurface 32s linear infinite;
+}
+.orbit-core::before {
+  inset:-14%;
+  background:
+    repeating-linear-gradient(13deg, transparent 0 7px, rgba(231,255,185,.17) 8px 9px, transparent 10px 18px),
+    repeating-linear-gradient(104deg, transparent 0 18px, rgba(5,18,5,.2) 19px 23px, transparent 24px 37px),
+    radial-gradient(ellipse at 42% 38%, rgba(224,255,175,.26), transparent 48%);
+  border-radius:44%;
+  filter:blur(.65px);
+  transform:rotate(-28deg) translateZ(18px);
+  mix-blend-mode:screen;
+}
+.orbit-core::after {
+  background:
+    radial-gradient(ellipse at 18% 50%, rgba(240,255,208,.13), transparent 37%),
+    linear-gradient(108deg, rgba(255,255,255,.27), transparent 23% 49%, rgba(0,0,0,.14) 64%, rgba(0,0,0,.84));
+  box-shadow:inset 0 0 0 1px rgba(220,255,177,.12);
+}
+.orbit-continent {
+  width:58%; height:42%; top:22%; left:14%;
+  background:
+    radial-gradient(ellipse at 35% 38%, rgba(202,238,140,.3), transparent 65%),
+    repeating-linear-gradient(35deg, rgba(12,32,10,.56) 0 5px, rgba(46,69,25,.32) 6px 9px);
+  filter:blur(3px); opacity:.82;
+}
+.orbit-ring {
+  inset:5% -18%;
+  border:1px solid rgba(208,255,140,.58);
+  box-shadow:0 0 5px rgba(200,241,105,.22), 0 0 22px rgba(177,225,96,.12), inset 0 0 8px rgba(200,241,105,.08);
+}
+.ring-one { transform:rotateX(69deg) rotateZ(-25deg) translateZ(23px); }
+.ring-one::after {
+  content:""; position:absolute; inset:-1px; border-radius:50%;
+  border:3px solid transparent; border-top-color:rgba(235,255,195,.82);
+  border-left-color:rgba(200,241,105,.18); filter:blur(.35px);
+}
+.ring-two {
+  inset:0 -9%; border-color:rgba(200,241,105,.22);
+  box-shadow:0 0 16px rgba(200,241,105,.08);
+  transform:rotateY(67deg) rotateZ(25deg);
+  animation:orbitRingDrift 18s linear infinite;
+}
+.orbit-moon {
+  width:9%; top:13%; right:15%;
+  background:radial-gradient(circle at 27% 23%, #fffde2 0 4%, #d8f5a1 15%, #8eaf59 45%, #26371b 77%, #10170d 100%);
+  box-shadow:0 0 0 2px rgba(206,255,139,.07), 0 0 18px rgba(200,241,105,.45), 0 0 36px rgba(200,241,105,.16);
+  animation:moonDrift 8s ease-in-out infinite;
+}
+.orbit-label {
+  bottom:-1%; padding:5px 9px;
+  border:1px solid rgba(200,241,105,.18);
+  border-radius:999px; background:rgba(9,14,7,.55);
+  box-shadow:0 0 18px rgba(200,241,105,.07);
+  font-size:8px; letter-spacing:.22em; backdrop-filter:blur(8px);
+}
+@keyframes orbitHalo { from { opacity:.55; transform:translateZ(-24px) scale(1.05); } to { opacity:1; transform:translateZ(-24px) scale(1.2); } }
+@keyframes orbitSurface { from { background-position:0 0; } to { background-position:100% 50%; } }
+@keyframes orbitRingDrift { from { rotate:0deg; } to { rotate:360deg; } }
+@keyframes moonDrift { 0%,100% { translate:0 0; } 50% { translate:5px -7px; } }
+@media (max-width:1024px) {
+  .shorty-3d-orbit { width:clamp(128px, 20vw, 170px); top:74px; right:4px; opacity:.9; }
+  .orbit-label { display:none; }
+}
+@media (max-width:520px) {
+  .shorty-3d-orbit { width:124px; top:72px; right:-12px; opacity:.68; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .shorty-3d-orbit::before,.orbit-ring,.orbit-moon { animation:none !important; }
+}
