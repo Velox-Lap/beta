@@ -124,3 +124,63 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .shorty-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 }
+
+
+/* Interactive 3D memory planet — CSS 3D layers keep it lightweight on iPad/mobile. */
+.shorty-3d-orbit {
+  --orbit-tilt-x: 0deg;
+  --orbit-tilt-y: 0deg;
+  position: fixed;
+  width: clamp(150px, 22vw, 310px);
+  aspect-ratio: 1;
+  right: clamp(10px, 5vw, 76px);
+  top: clamp(92px, 17vh, 190px);
+  z-index: 1;
+  pointer-events: none;
+  perspective: 900px;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--orbit-tilt-x)) rotateY(var(--orbit-tilt-y));
+  transition: opacity 350ms ease;
+  opacity: .92;
+}
+.orbit-core {
+  position: absolute; inset: 19%;
+  overflow: hidden; border-radius: 50%;
+  transform-style: preserve-3d;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(236,255,194,.95) 0, rgba(177,216,109,.75) 5%, transparent 19%),
+    radial-gradient(ellipse at 68% 72%, rgba(17,28,15,.95) 0, rgba(43,61,30,.92) 28%, transparent 55%),
+    radial-gradient(circle at 38% 35%, #a7ca68 0, #516a35 38%, #202b1a 69%, #0b0e09 100%);
+  box-shadow: inset -18px -12px 28px rgba(0,0,0,.78), inset 7px 5px 16px rgba(226,255,181,.3), 0 0 35px rgba(176,220,104,.14);
+  animation: orbitFloat 7s ease-in-out infinite;
+}
+.orbit-core::before {
+  content: ""; position: absolute; inset: -20%;
+  background: repeating-linear-gradient(18deg, transparent 0 10px, rgba(223,255,172,.15) 11px 13px, transparent 14px 25px);
+  border-radius: 42%; filter: blur(1px); transform: rotate(-28deg) translateZ(18px);
+  mix-blend-mode: screen;
+}
+.orbit-core::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(105deg, rgba(255,255,255,.25), transparent 34% 65%, rgba(0,0,0,.65));
+}
+.orbit-continent { position:absolute; width:55%; height:36%; top:24%; left:19%; border-radius: 48% 35% 58% 28%; background:rgba(15,31,12,.45); filter:blur(7px); transform:rotate(-28deg) translateZ(10px); }
+.orbit-crater { position:absolute; display:block; border-radius:50%; border:1px solid rgba(230,255,188,.17); background:rgba(9,18,7,.28); box-shadow:inset 2px 3px 7px rgba(0,0,0,.4); }
+.crater-a { width:19%; height:13%; left:56%; top:28%; transform:translateZ(15px); }
+.crater-b { width:12%; height:9%; left:29%; top:58%; transform:translateZ(9px); }
+.crater-c { width:8%; height:7%; left:66%; top:63%; transform:translateZ(12px); }
+.orbit-ring { position:absolute; inset:7% -13%; border:1px solid rgba(200,241,105,.7); border-radius:50%; transform-style:preserve-3d; box-shadow:0 0 12px rgba(200,241,105,.12); }
+.ring-one { transform:rotateX(68deg) rotateZ(-25deg) translateZ(20px); }
+.ring-two { inset:1% -7%; border-color:rgba(200,241,105,.22); transform:rotateY(68deg) rotateZ(25deg); }
+.orbit-moon { position:absolute; width:8%; aspect-ratio:1; top:17%; right:18%; border-radius:50%; background:radial-gradient(circle at 30% 25%, #f1ffc9, #91b45c 48%, #25351b 78%); box-shadow:0 0 15px rgba(200,241,105,.35); transform:translateZ(65px); }
+.orbit-label { position:absolute; bottom:2%; left:50%; transform:translateX(-50%) translateZ(35px); font:9px/1 "IBM Plex Mono",monospace; letter-spacing:.18em; color:rgba(210,241,166,.7); white-space:nowrap; }
+@keyframes orbitFloat { 0%,100% { transform:translateY(0) rotate(-3deg); } 50% { transform:translateY(-9px) rotate(3deg); } }
+.shorty-visuals-muted .shorty-3d-orbit { opacity:0 !important; }
+@media (max-width: 760px) {
+  .shorty-3d-orbit { width:clamp(115px, 30vw, 165px); top:82px; right:-22px; opacity:.44; }
+  .orbit-label { display:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit-core { animation:none !important; }
+  .shorty-3d-orbit { transform:none !important; }
+}
