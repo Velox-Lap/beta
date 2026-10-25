@@ -224,7 +224,7 @@ function makeDiskMaterial(){
     vertexShader:[
       'varying vec3 vPos;',
       'void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}'
-    ].join('\\n'),
+    ].join('\n'),
     fragmentShader:[
       'varying vec3 vPos;',
       'uniform float uTime;uniform float uBrightness;uniform float uTurbulence;uniform float uEnv;uniform float uSpin;',
@@ -243,7 +243,7 @@ function makeDiskMaterial(){
       ' col*=.75+filament*.9+swirl*.2;',
       ' gl_FragColor=vec4(col,alpha);',
       '}'
-    ].join('\\n')
+    ].join('\n')
   });
 }
 function createStars(){
