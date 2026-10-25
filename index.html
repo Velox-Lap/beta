@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20261025-2">
+  <link rel="stylesheet" href="./styles.css?v=20261025-3">
   <link rel="stylesheet" href="./animations.css?v=20261025-7">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./config.js?v=20261020-1"></script>
@@ -45,7 +45,7 @@
         <div class="terminal-footer"><span>UTF-8</span><span>NO BAD DAYS — ONLY DEBUGGING</span><span>ESC / HELP</span></div>
       </div>
     </section>
-    <section class="quick-guide" aria-label="First-time guide"><div><span class="eyebrow">FIRST TIME HERE?</span><h2>Three small steps to begin.</h2></div><ol><li><b>Type <code>help</code></b><span>See the available terminal commands.</span></li><li><b>Type <code>login</code> or <code>register</code></b><span>Sign in, create an account, or try the demo guest.</span></li><li><b>Explore the sidebar</b><span>Find your profile, friends, pair link, memories, letters, and chat.</span></li></ol><button id="guideToggle" type="button" class="small-btn">Hide guide −</button></section><p class="boot-note">A private little corner of the internet, made with care.</p>
+    <section class="quick-guide" aria-label="First-time guide"><div><span class="eyebrow">FIRST TIME HERE?</span><h2>Three small steps to begin.</h2></div><ol><li><b>Type <code>help</code></b><span>See the available terminal commands.</span></li><li><b>Type <code>login</code> or <code>register</code></b><span>Sign in, create an account, or try the demo guest.</span></li><li><b>Explore the sidebar</b><span>Find your profile, friends, pair link, memories, letters, and chat.</span></li></ol><a class="observatory-entry" href="./observatory.html"><span class="observatory-entry-mark">◉</span><span class="observatory-entry-copy"><b>LAUNCH VELOX OBSERVATORY</b><small>3D black-hole lab · mission controls · scientific labels</small></span><span class="observatory-entry-arrow">↗</span></a><button id="guideToggle" type="button" class="small-btn">Hide guide −</button></section><p class="boot-note">A private little corner of the internet, made with care.</p>
   </main>
 
   <dialog id="authDialog" class="auth-dialog">
@@ -84,6 +84,7 @@
         <button class="nav-item" type="button" data-section="memories"><span class="nav-icon">▧</span><span>คลังความทรงจำ</span></button>
         <button class="nav-item" type="button" data-section="letters"><span class="nav-icon">✉</span><span>จดหมายถึงเธอ</span></button>
         <button class="nav-item" type="button" data-section="profile"><span class="nav-icon">◉</span><span>โปรไฟล์</span></button>
+        <a class="nav-item observatory-nav" href="./observatory.html"><span class="nav-icon">◉</span><span>VELOX Lab</span></a>
       </nav>
       <div class="sidebar-bottom">
         <div class="sync-card"><span class="sync-dot"></span><div><b id="syncLabel">LOCAL PREVIEW</b><small id="syncDetail">Data stays in this browser</small></div></div>
