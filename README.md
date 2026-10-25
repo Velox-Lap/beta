@@ -15,6 +15,10 @@ Open `index.html` in a modern browser. No build tool is required.
 - Demo pairing-code UI
 - Floating pixel companion
 
+## VELOX Quantum Singularity Observatory
+- Open `observatory.html` for a standalone interactive Three.js black-hole visualization with presets, physics-inspired controls, scientific hotspots, a probe animation, JSON export and PNG capture.
+- The visual model is educational/stylized; its displayed spacetime effects are not a numerical-relativity solver or measured astronomical data.
+
 ## Important prototype limitations
 This is a front-end demo. Login is a playful terminal transition, not real authentication. Profile, memories and friends are saved in the current browser via `localStorage`; they do not sync between devices or users. The pairing screen does not securely connect accounts. Do not use it to store sensitive information.
 
