@@ -164,3 +164,25 @@ body{background:#0a100d;color:#e4ecdc;font-family:var(--sans)}
 @media(max-width:760px){.app-shell{display:flex;flex-direction:column;min-height:100vh;padding-bottom:0}.system-bar{position:relative;order:0;min-height:44px;padding:0 13px;gap:8px}.system-bar strong{font-size:12px}.system-bar span{font-size:8px}.system-bar span:nth-child(2){display:none}.sidebar{order:2;position:fixed;z-index:15;top:auto;bottom:0;left:0;width:100%;height:auto;min-height:0;padding:6px 5px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #344a39;background:#0a100df5}.side-nav{display:flex;justify-content:space-around;gap:2px}.nav-item{flex:1;min-width:0;padding:7px 1px;font-size:8px;white-space:normal;text-align:center}.nav-icon{font-size:15px}.workspace{order:1;padding:0 14px 78px}.workspace-topbar{min-height:44px}.view-root{padding-top:18px}.os-location{font-size:8px}.os-location span:last-child{display:none}.os-welcome{display:block}.os-welcome h1{font-size:25px}.os-session{text-align:left;margin-top:13px;display:flex;justify-content:space-between;flex-wrap:wrap}.os-feature-grid{margin-bottom:21px}.os-anniversary{padding:15px;gap:13px}.os-anniversary-number{font-size:48px}.os-daily-note{padding:15px}.os-daily-note>p{font-size:15px}.os-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.os-stat{padding:12px}.os-stat strong{font-size:29px}.os-shortcuts,.os-lower-grid{grid-template-columns:1fr}.os-memory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.os-connection{align-items:flex-start;flex-wrap:wrap}.os-connection .small-btn{margin-left:19px}.app-footer{margin-bottom:0}.quick-guide{margin-bottom:20px}}
 @media(max-width:420px){.system-bar{padding:0 9px}.system-bar strong{font-size:10px}.system-bar span:last-child{font-size:7px}.os-anniversary-number{font-size:42px}.os-anniversary h2{font-size:14px}.os-note-meta{font-size:8px}.os-stat-top{font-size:10px}.os-stat strong{font-size:25px}.os-empty{align-items:flex-start;flex-wrap:wrap}.os-empty .small-btn{margin-left:0}.os-shortcut{padding:13px}}
 [data-theme='light'] .system-bar{background:#b5f58a;color:#0a100d}
+
+/* CYBERNETIC SINGULARITY — decorative WebGL backdrop, layered beneath all app UI */
+.shorty-singularity {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: .72;
+  mix-blend-mode: screen;
+}
+body { isolation: isolate; }
+.boot-screen, .app-shell, .auth-dialog, .letter-dialog,
+.mascot-button, .mascot-bubble, .toast { position: relative; z-index: 2; }
+@media (max-width: 700px) {
+  .shorty-singularity { opacity: .48; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shorty-singularity { opacity: .35; }
+}
