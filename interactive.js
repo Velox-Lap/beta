@@ -11,12 +11,12 @@
   canvas.setAttribute("aria-hidden", "true");
   Object.assign(canvas.style, {
     position: "fixed", inset: "0", width: "100%", height: "100%",
-    pointerEvents: "none", zIndex: "0", opacity: ".34"
+    pointerEvents: "none", zIndex: "1", opacity: ".68"
   });
   document.body.prepend(canvas);
   const ctx = canvas.getContext("2d", { alpha: true });
   let w = 0, h = 0, dpr = 1, stars = [], raf = 0;
-  const count = () => Math.min(110, Math.floor((w * h) / 14000));
+  const count = () => Math.min(150, Math.floor((w * h) / 10500));
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     w = window.innerWidth; h = window.innerHeight;
@@ -24,7 +24,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     stars = Array.from({ length: count() }, () => ({
       x: Math.random() * w, y: Math.random() * h,
-      r: Math.random() * 1.25 + .25, a: Math.random() * .42 + .08,
+      r: Math.random() * 1.6 + .45, a: Math.random() * .52 + .16,
       phase: Math.random() * Math.PI * 2, speed: Math.random() * .006 + .002
     }));
     draw();
